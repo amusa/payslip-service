@@ -1,0 +1,10 @@
+*/nb-configuration.xml
+*/target/*
+*.jar
+*.class
+/target/*
+*.war
+nb-configuration.xml
+target/*
+payslip-processing/payslip-processing-api/target/*
+payslip-processing/payslip-processing-lib/target/*
