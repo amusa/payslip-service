@@ -6,6 +6,7 @@
 package com.payslip.fulfilment;
 
 import com.payslip.fulfilment.infrastructure.jco.PayData;
+import com.payslip.lib.common.events.MonthMarker;
 import com.payslip.lib.common.events.PayslipRequested;
 import com.sap.conn.jco.JCoException;
 import java.net.URI;
@@ -42,7 +43,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
         logger.log(Level.INFO, "--- Event received for processing ---");
         try {
             logger.log(Level.INFO, "--- Invoking PayslipService.getPayslipBytes() ---");
-            List<PayData> payDataList = payslipService.getPayslipBytes(request.getStaffId(), request.getPeriodFrom().getDate(), request.getPeriodTo().getDate());
+            List<PayData> payDataList = payslipService.getPayslipBytes(request.getStaffId(), request.getPeriodFrom().getDate(), request.getPeriodTo().getDate(MonthMarker.END));
 
             sendEmail(request, payDataList);
         } catch (JCoException ex) {
@@ -101,13 +102,13 @@ public class DefaultFulfilmentService implements FulfilmentService {
 
     private String createFileName(PayData pd) {
         String payType;
-        
+
         if (pd.getOffCycleReason() == null || "".equals(pd.getOffCycleReason().trim())) {
             payType = "Payslip";
         } else {
             payType = sanitize(pd.getOffCycleReason());
         }
-        
+
         return String.format("%tb_%tY_%s_%s.pdf",
                 pd.getPayDate(),
                 pd.getPayDate(),
