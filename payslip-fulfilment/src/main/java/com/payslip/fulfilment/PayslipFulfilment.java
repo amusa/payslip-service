@@ -28,6 +28,9 @@ public class PayslipFulfilment {
     @Resource
     ManagedExecutorService mes;
 
+    @Inject
+    private FulfilmentService fulfilmentService;
+
     private EventConsumer eventConsumer;
 
     int initialDelay = 0;
@@ -42,8 +45,7 @@ public class PayslipFulfilment {
 
     public void handle(@Observes PayslipRequested event) {
         logger.log(Level.INFO, "Handling event {0}", event);
-        //broker.when(event);
-
+        fulfilmentService.when(event);
     }
 
     @PostConstruct
@@ -58,7 +60,6 @@ public class PayslipFulfilment {
             events.fire(ev);
         }, payslips);
 
-//        executor.scheduleAtFixedRate(eventConsumer, initialDelay, period, TimeUnit.MINUTES);
         logger.log(Level.INFO, "--- Submitting eventconsumer task {0}", mes.toString());
         mes.submit(eventConsumer);
         logger.log(Level.INFO, "--- Event consumer scheduled with topic {0}", payslips);

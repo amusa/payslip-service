@@ -1,0 +1,6 @@
+
+**** Error file opened at 20180719 163559 Western African Time Rel. 3.0.18 (2018-03-23) [721.1016]
+Error:  >Thu Jul 19 16:35:59,839<    >RfcGetException rc (7) message: Function module "BAPI_GET_PAYSLIP_PDF" cannot be used for 'remote' calls.
+<RfcGetException
+
+

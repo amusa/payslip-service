@@ -11,23 +11,24 @@
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>        
-    </properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 
+        <version.thorntail>2.0.0.Final</version.thorntail>           
+    </properties>   
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.wildfly.swarm</groupId>
+                <groupId>io.thorntail</groupId>
                 <artifactId>bom-all</artifactId>
-                <version>${version.wildfly-swarm}</version>
-                <type>pom</type>
+                <version>${version.thorntail}</version>
                 <scope>import</scope>
+                <type>pom</type>
             </dependency>
-            <dependency>
+<!--            <dependency>
                 <groupId>javax</groupId>
                 <artifactId>javaee-api</artifactId>
                 <version>7.0</version>
                 <scope>provided</scope>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>com.microsoft.ews-java-api</groupId>
                 <artifactId>ews-java-api</artifactId>

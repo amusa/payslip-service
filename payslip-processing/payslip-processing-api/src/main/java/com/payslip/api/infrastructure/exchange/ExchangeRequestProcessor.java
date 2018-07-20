@@ -55,6 +55,8 @@ public class ExchangeRequestProcessor implements RequestProcessor {
             service.setUrl(new URI(url));
         } catch (URISyntaxException ex) {
             logger.log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
         }
 
         // Subscribe to pull notifications in the Inbox folder, and get notified when a new mail is received, when an item or folder is created, or when an item or folder is deleted.
