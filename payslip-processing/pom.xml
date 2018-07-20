@@ -23,12 +23,11 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-<!--            <dependency>
+            <dependency>
                 <groupId>javax</groupId>
                 <artifactId>javaee-api</artifactId>
                 <version>7.0</version>
-                <scope>provided</scope>
-            </dependency>-->
+            </dependency>
             <dependency>
                 <groupId>com.microsoft.ews-java-api</groupId>
                 <artifactId>ews-java-api</artifactId>

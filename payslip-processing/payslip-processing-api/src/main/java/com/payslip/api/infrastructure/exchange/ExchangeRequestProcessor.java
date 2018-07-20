@@ -76,17 +76,17 @@ public class ExchangeRequestProcessor implements RequestProcessor {
     public List<PayslipRequested> pullEmailRequests() throws Exception {
         List<PayslipRequested> requests = new ArrayList<>();
         GetEventsResults events = subscription.getEvents();
-        logger.log(Level.INFO, "--- events======" + events.getItemEvents());
+        logger.log(Level.INFO, "--- events======{0}", events.getItemEvents());
 
         for (ItemEvent itemEvent : events.getItemEvents()) {
             if (itemEvent.getEventType() == EventType.NewMail) {
                 EmailMessage message = EmailMessage.bind(service, itemEvent.getItemId());
                 if (message.getSubject().startsWith("#PAYSLIP")) {
-                    logger.info("Processing new payslip request: " + message.getSubject());
+                    logger.log(Level.INFO, "--- Processing new payslip request: {0} ---", message.getSubject());
                     PayslipRequested emailRequest = RequestParser.parse(message.getSubject(), message.getDateTimeSent(), message.getSender().getAddress());
                     requests.add(emailRequest);
                 } else {
-                    logger.info("Ignoring email: " + message.getSubject());
+                    logger.log(Level.INFO, "--- Ignoring email: {0} ---", message.getSubject());
                 }
 
             }

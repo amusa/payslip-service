@@ -32,7 +32,7 @@
             <groupId>io.thorntail</groupId>
             <artifactId>microprofile</artifactId>
         </dependency>
-                <dependency>
+        <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>ejb</artifactId>
         </dependency>
@@ -60,12 +60,10 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>        
         </dependency>  
-        <!--        <dependency>
+        <dependency>
             <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>7.0</version>
-            <scope>provided</scope>
-        </dependency>        -->
+            <artifactId>javaee-api</artifactId>            
+        </dependency>
     </dependencies>
 
     <build>

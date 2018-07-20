@@ -41,15 +41,20 @@ public class DefaultFulfilmentService implements FulfilmentService {
     @Override
     public void when(PayslipRequested request) {
         logger.log(Level.INFO, "--- Event received for processing ---");
-        try {
+        //TODO:validate request
+                
+        try {                        
             logger.log(Level.INFO, "--- Invoking PayslipService.getPayslipBytes() ---");
-            List<PayData> payDataList = payslipService.getPayslipBytes(request.getStaffId(), request.getPeriodFrom().getDate(), request.getPeriodTo().getDate(MonthMarker.END));
+            List<PayData> payDataList = payslipService
+                    .getPayslipBytes(request.getStaffId(), 
+                            request.getPeriodFrom().getDate(), 
+                            request.getPeriodTo().getDate(MonthMarker.END));
 
             sendEmail(request, payDataList);
         } catch (JCoException ex) {
-            Logger.getLogger(DefaultFulfilmentService.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(DefaultFulfilmentService.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
 
     }

@@ -20,48 +20,46 @@ import javax.json.JsonObject;
  */
 public class PayPeriod {
 
-    private String year;
-    private String month;
+    private int year;
+    private int month;
 
     public PayPeriod() {
     }
 
-    public PayPeriod(String year, String month) {
+    public PayPeriod(int year, int month) {
         this.year = year;
         this.month = month;
     }
 
     public PayPeriod(JsonObject jsonObject) {
-        this(jsonObject.getString("year"),
-                jsonObject.getString("month")
+        this(jsonObject.getInt("year"),
+                jsonObject.getInt("month")
         );
     }
 
-    public String getYear() {
+    public int getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(int year) {
         this.year = year;
     }
 
-    public String getMonth() {
+    public int getMonth() {
         return month;
     }
 
-    public void setMonth(String month) {
+    public void setMonth(int month) {
         this.month = month;
     }
 
     public Date getDate(MonthMarker marker) {
         LocalDate payDate;
-        int yyyy = Integer.parseInt(year);
-        int mm = Integer.parseInt(month);
-
+        
         if (marker == MonthMarker.END) {
-            payDate = YearMonth.of(yyyy, mm).atEndOfMonth();
+            payDate = YearMonth.of(year, month).atEndOfMonth();
         } else {
-            payDate = YearMonth.of(yyyy, mm).atDay(1);
+            payDate = YearMonth.of(year, month).atDay(1);
         }
 
         try {
