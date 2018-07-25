@@ -3,15 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.payslip.api.service.util;
+package com.payslip.api.infrastructure.ews.exceptions;
 
 /**
  *
  * @author maliska
  */
-public class PayPeriodOutOfBoundException extends Exception {
+public class PayPeriodException extends Exception {
 
-    public PayPeriodOutOfBoundException(String message) {
+    public PayPeriodException(String message) {
         super(message);
     }
 

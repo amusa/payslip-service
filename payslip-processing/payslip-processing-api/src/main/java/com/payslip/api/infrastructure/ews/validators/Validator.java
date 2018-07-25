@@ -3,16 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.payslip.api.service.util;
+package com.payslip.api.infrastructure.ews.validators;
 
 /**
  *
  * @author maliska
  */
-public class PayPeriodException extends Exception {
+public interface Validator {    
 
-    public PayPeriodException(String message) {
-        super(message);
-    }
-
+    void validate() throws Exception;
 }

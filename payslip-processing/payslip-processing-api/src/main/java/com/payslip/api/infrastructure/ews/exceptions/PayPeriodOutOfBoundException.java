@@ -3,13 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.payslip.api.service.util;
+package com.payslip.api.infrastructure.ews.exceptions;
 
 /**
  *
  * @author maliska
  */
-public interface Validator {    
+public class PayPeriodOutOfBoundException extends Exception {
 
-    void validate() throws Exception;
+    public PayPeriodOutOfBoundException(String message) {
+        super(message);
+    }
+
 }

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.payslip.api.service.util;
+package com.payslip.api.infrastructure.ews.validators;
 
+import com.payslip.api.infrastructure.ews.exceptions.PayPeriodException;
 import com.payslip.lib.common.events.PayPeriod;
 
 /**
