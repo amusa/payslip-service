@@ -24,6 +24,7 @@ import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
 import microsoft.exchange.webservices.data.property.complex.EmailAddress;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  *
@@ -36,18 +37,36 @@ public class DefaultFulfilmentService implements FulfilmentService {
     private static final Logger logger = Logger.getLogger(DefaultFulfilmentService.class.getName());
 
     @Inject
+    @ConfigProperty(name = "EWS_HOST")
+    private String ewsHost;
+
+    @Inject
+    @ConfigProperty(name = "EWS_USER")
+    private String ewsUser;
+
+    @Inject
+    @ConfigProperty(name = "EWS_PASSWORD")
+    private String ewsPwd;
+
+    @Inject
+    @ConfigProperty(name = "EWS_DOMAIN")
+    private String ewsDomain;
+
+    private String ewsUrl;
+
+    @Inject
     private PayslipService payslipService;
 
     @Override
     public void when(PayslipRequested request) {
         logger.log(Level.INFO, "--- Event received for processing ---");
         //TODO:validate request
-                
-        try {                        
+
+        try {
             logger.log(Level.INFO, "--- Invoking PayslipService.getPayslipBytes() ---");
             List<PayData> payDataList = payslipService
-                    .getPayslipBytes(request.getStaffId(), 
-                            request.getPeriodFrom().getDate(), 
+                    .getPayslipBytes(request.getStaffId(),
+                            request.getPeriodFrom().getDate(),
                             request.getPeriodTo().getDate(MonthMarker.END));
 
             sendEmail(request, payDataList);
@@ -62,17 +81,16 @@ public class DefaultFulfilmentService implements FulfilmentService {
     @PostConstruct
     private void initConsumer() {
         logger.log(Level.INFO, "--- Initializing Default Fulfilment Service ---");
-        String url = "https://mail.nnpcgroup.com/EWS/Exchange.asmx";
-
+        ewsUrl = String.format("https://%s/EWS/Exchange.asmx", ewsHost);
         service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
 
         // Provide Crendentials
-        ExchangeCredentials credentials = new WebCredentials("18359",
-                "M@dan1sc0", "chq");
+        ExchangeCredentials credentials = new WebCredentials(ewsUser,
+                ewsPwd, ewsDomain);
         service.setCredentials(credentials);
 
         try {
-            service.setUrl(new URI(url));
+            service.setUrl(new URI(ewsUrl));
         } catch (URISyntaxException ex) {
             logger.log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -100,7 +118,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
             logger.log(Level.INFO, "--- Sending email ---");
             msg.send();
         } catch (Exception ex1) {
-            logger.log(Level.SEVERE, null, ex1);
+            logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
         }
 
     }

@@ -1,0 +1,31 @@
+version: '2'
+services:
+  processor:
+    image: maliska/payslip-processing:latest 
+    container_name: request_processor
+    #restart: always    
+    #ports:
+    #  - "8082:8082"
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:29092
+    networks:
+      - paynet      
+    
+  fulfilment:
+    image: maliska/payslip-fulfilment:latest 
+    #container_name: request_fulfilment
+    #restart: always
+    #ports:
+    #  - "8081:8081"
+    environment:           
+      - BOOTSTRAP_SERVERS=kafka:29092      
+    networks:
+      - paynet
+      
+networks:
+    paynet:
+        external: true
+       
+
+    
+

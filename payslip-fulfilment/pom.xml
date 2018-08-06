@@ -16,6 +16,9 @@
         <version.thorntail>2.0.0.Final</version.thorntail>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <docker.image>maliska/payslip-fulfilment:latest</docker.image> 
+        <docker.host.address>localhost</docker.host.address>
+        <swarm.port>8081</swarm.port>  
     </properties>
    
     <dependencies>        
@@ -47,7 +50,7 @@
         <dependency>
             <groupId>com.sap</groupId>
             <artifactId>sapjco3</artifactId>
-            <version>3.0</version>
+            <version>3.0</version>       
         </dependency> 
         <dependency>
             <groupId>io.thorntail</groupId>
@@ -63,7 +66,9 @@
     
     <build>
         <finalName>payslip-fulfilment</finalName>
+        
         <plugins> 
+           
             <plugin>
                 <groupId>io.thorntail</groupId>
                 <artifactId>thorntail-maven-plugin</artifactId>
@@ -81,7 +86,8 @@
                         <swarm.port.offset>1</swarm.port.offset>
                     </properties>
                 </configuration>
-            </plugin>                       
+            </plugin>  
+                              
         </plugins>
     </build>
     

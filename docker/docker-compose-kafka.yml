@@ -1,0 +1,20 @@
+version: '2'
+services:     
+  kafka:
+    image: spotify/kafka:latest
+    ports:
+      - "9092:9092"
+      - "2181:2181"
+    networks:
+      - paynet
+    environment:
+      - TOPICS=payslips
+      - ZK_CONNECT="localhost:2181"
+      - KAFKA_ADVERTISED_HOST_NAME=localhost
+      - KAFKA_BROKER_ID=01      
+networks:
+    paynet:
+        external: true
+            
+    
+

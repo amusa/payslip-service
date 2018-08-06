@@ -44,15 +44,22 @@ public class PayslipFulfilment {
     Event<PayslipRequested> events;
 
     public void handle(@Observes PayslipRequested event) {
-        logger.log(Level.INFO, "Handling event {0}", event);
+        logger.log(Level.INFO, "--- Handling event {0} ---", event);
         fulfilmentService.when(event);
     }
 
     @PostConstruct
     public void init() {
+        String bootstrapServers = System.getenv("BOOTSTRAP_SERVERS");
+        logger.log(Level.INFO, "--- ENVIRONMENT VARIABLES: BOOTSTRAP_SERVERS={0} ---", bootstrapServers);
+
+        if (bootstrapServers != null) {
+            kafkaProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        }
+
         kafkaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "payslip-processor");
         kafkaProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, UUID.randomUUID().toString());
-        logger.log(Level.INFO, "Initializing service with properties: {0}", kafkaProperties);
+        logger.log(Level.INFO, "--- initializing service with properties: {0} ---\n", kafkaProperties);
         String payslips = kafkaProperties.getProperty("payslip.topic");
 
         eventConsumer = new EventConsumer(kafkaProperties, ev -> {
@@ -60,14 +67,14 @@ public class PayslipFulfilment {
             events.fire(ev);
         }, payslips);
 
-        logger.log(Level.INFO, "--- Submitting eventconsumer task {0}", mes.toString());
+        logger.log(Level.INFO, "--- Submitting eventconsumer task {0} ---", mes.toString());
         mes.submit(eventConsumer);
         logger.log(Level.INFO, "--- Event consumer scheduled with topic {0}", payslips);
     }
 
     @PreDestroy
     public void close() {
-        logger.info("--- PayslipFulfilment destroying");
+        logger.info("--- PayslipFulfilment destroying ---");
         eventConsumer.stop();
     }
 }

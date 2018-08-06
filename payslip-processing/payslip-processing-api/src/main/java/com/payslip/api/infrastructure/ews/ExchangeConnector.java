@@ -5,25 +5,48 @@
  */
 package com.payslip.api.infrastructure.ews;
 
+import com.payslip.api.infrastructure.ews.exceptions.PayPeriodException;
+import com.payslip.api.infrastructure.ews.exceptions.PayPeriodRangeValidator;
+import com.payslip.api.infrastructure.ews.validators.PayPeriodValidator;
+import com.payslip.api.infrastructure.ews.validators.PayPeriodViewValidator;
+import com.payslip.api.infrastructure.ews.validators.ValidatorProcessor;
 import com.payslip.api.infrastructure.kafka.EventProducer;
+import com.payslip.api.util.RequestParser;
+import com.payslip.lib.common.events.PayslipRequested;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import microsoft.exchange.webservices.data.core.ExchangeService;
+import microsoft.exchange.webservices.data.core.PropertySet;
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
 import microsoft.exchange.webservices.data.core.enumeration.notification.EventType;
 import microsoft.exchange.webservices.data.core.enumeration.property.WellKnownFolderName;
+import microsoft.exchange.webservices.data.core.enumeration.service.DeleteMode;
+import microsoft.exchange.webservices.data.core.response.GetItemResponse;
+import microsoft.exchange.webservices.data.core.response.ServiceResponseCollection;
+import microsoft.exchange.webservices.data.core.service.item.EmailMessage;
+import microsoft.exchange.webservices.data.core.service.schema.ItemSchema;
 import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
+import microsoft.exchange.webservices.data.notification.ItemEvent;
+import microsoft.exchange.webservices.data.notification.NotificationEvent;
+import microsoft.exchange.webservices.data.notification.NotificationEventArgs;
 import microsoft.exchange.webservices.data.notification.StreamingSubscription;
 import microsoft.exchange.webservices.data.notification.StreamingSubscriptionConnection;
+import microsoft.exchange.webservices.data.notification.SubscriptionErrorEventArgs;
 import microsoft.exchange.webservices.data.property.complex.FolderId;
+import microsoft.exchange.webservices.data.property.complex.ItemId;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  *
@@ -31,46 +54,156 @@ import microsoft.exchange.webservices.data.property.complex.FolderId;
  */
 @Singleton
 @Startup
-public class ExchangeConnector {
+public class ExchangeConnector implements StreamingSubscriber {
 
     private static final Logger logger = Logger.getLogger(ExchangeConnector.class.getName());
-    private ExchangeService service;
+    private static ExchangeService service;
     private static StreamingSubscriptionConnection conn;
-    public static StreamingSubscription subscription;
-    private final String URL = "https://mail.nnpcgroup.com/EWS/Exchange.asmx";
+    private static StreamingSubscription subscription;
+
+    @Inject
+    @ConfigProperty(name = "EWS_USER")
+    private String ewsUser;
+
+    @Inject
+    @ConfigProperty(name = "EWS_PASSWORD")
+    private String ewsPwd;
+
+    @Inject
+    @ConfigProperty(name = "EWS_DOMAIN")
+    private String ewsDomain;
+
+    @Inject
+    @ConfigProperty(name = "EWS_HOST")
+    private String ewsHost;
+
+    private String ewsUrl;
 
     @Inject
     EventProducer producer;
-    
+
     @PostConstruct
     private void init() {
-        service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-        ExchangeCredentials credentials = new WebCredentials("18359", "M@dan1sc0", "chq");
-        service.setCredentials(credentials);
-        
+        logger.log(Level.INFO, "--- initializing Exchange Connector ---");
         try {
-            service.setUrl(new URI(URL));
+            ewsUrl = String.format("https://%s/EWS/Exchange.asmx", ewsHost);
+
+            service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+            ExchangeCredentials credentials = new WebCredentials(ewsUser, ewsPwd, ewsDomain);
+            service.setCredentials(credentials);
+            service.setUrl(new URI(ewsUrl));
+
             WellKnownFolderName sd = WellKnownFolderName.Inbox;
             FolderId folderId = new FolderId(sd);
 
             ArrayList<FolderId> folder = new ArrayList<FolderId>();
             folder.add(folderId);
 
+            logger.log(Level.INFO, "--- Creating subscribtion ---");
             subscription = service.subscribeToStreamingNotifications(folder, EventType.NewMail);
-
-            conn = new StreamingSubscriptionConnection(service, 30);
+            logger.log(Level.INFO, "--- Creating streaming subscription connection ---");
+            conn = new StreamingSubscriptionConnection(service, 10);
+            logger.log(Level.INFO, "--- Subscribing to new mail events ---");
             conn.addSubscription(subscription);
-            StreamingSubscriptionListener streamListener = new StreamingSubscriptionListener(service, producer);
-            conn.addOnNotificationEvent(streamListener);
-            conn.addOnDisconnect(streamListener);
+
+            //StreamingSubscriber subscriber = new ExchangeStreamingSubscriber(producer);
+            conn.addOnNotificationEvent(this);
+            conn.addOnSubscriptionError(this);
+            conn.addOnDisconnect(this);
+
+            // Delegate event handlers. 
+            logger.log(Level.INFO, "--- Opening connection ---");
             conn.open();
+            logger.log(Level.INFO, "--- Connection opened. ---");
 
             logger.log(Level.INFO, "--- Payslip request streamingsubscribtion subscribed ---");
+
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException("--- Cannot connect ---", e);
         }
 
     }
+
+    @Override
+    public void notificationEventDelegate(Object sender, NotificationEventArgs nev) {
+        System.out.println("--- notification event ---");
+
+        // First retrieve the IDs of all the new emails
+        List<ItemId> newMailsIds = new ArrayList<ItemId>();
+
+        Iterator<NotificationEvent> it = nev.getEvents().iterator();
+        while (it.hasNext()) {
+            ItemEvent itemEvent = (ItemEvent) it.next();
+            if (itemEvent != null) {
+                newMailsIds.add(itemEvent.getItemId());
+            }
+        }
+
+        if (newMailsIds.size() > 0) {
+            // Now retrieve the Subject property of all the new emails in one
+            // call to EWS.
+            ServiceResponseCollection<GetItemResponse> responses;
+            ValidatorProcessor validator = new ValidatorProcessor();
+            try {
+                responses = service.bindToItems(newMailsIds, new PropertySet(ItemSchema.Subject));
+
+                logger.log(Level.INFO, "count=======" + responses.getCount());
+
+                for (GetItemResponse response : responses) {
+                    String subject = response.getItem().getSubject();
+                    EmailMessage message = EmailMessage.bind(service, response.getItem().getId());
+                    Pattern pattern = Pattern.compile("#PAYSLIP");
+                    Matcher matcher = pattern.matcher(response.getItem().getSubject());
+                    if (matcher.lookingAt()) {
+                        logger.log(Level.INFO, "--- Processing new payslip request: {0} ---", response.getItem().getSubject());
+                        PayslipRequested emailRequest = RequestParser.parse(subject, message.getDateTimeSent(), message.getSender().getAddress());
+//                         PayslipRequested emailRequest2 = RequestParser.parse2(subject, message.getDateTimeSent(), message.getSender().getAddress());
+
+                        logger.log(Level.INFO, "--- validating request ---");
+                        validator.add(new PayPeriodValidator(emailRequest.getPeriodFrom()));
+                        validator.add(new PayPeriodValidator(emailRequest.getPeriodTo()));
+                        validator.add(new PayPeriodRangeValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+                        validator.add(new PayPeriodViewValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+
+                        try {
+                            validator.process();
+                            logger.log(Level.INFO, "--- validation successful ---");
+                            logger.log(Level.INFO, "--- Publishing payslip requests to 'payslip.topic'");
+                            producer.publish(emailRequest);
+                            response.getItem().delete(DeleteMode.MoveToDeletedItems);
+                        } catch (PayPeriodException ppe) {
+                            //TODO:publish notification to error topic
+                            logger.log(Level.WARNING, ppe.getMessage());
+                        }
+                    } else {
+                        logger.log(Level.INFO, "--- Ignoring email: {0} ---", response.getItem().getSubject());
+                    }
+
+                }
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    @Override
+    public void subscriptionErrorDelegate(Object sender, SubscriptionErrorEventArgs ser) {
+        logger.log(Level.INFO, "--- Subscription error ---" + ser.getException());
+        // Cast the sender as a StreamingSubscriptionConnection object.          
+        StreamingSubscriptionConnection connection = (StreamingSubscriptionConnection) sender;
+
+        try {
+            logger.log(Level.INFO, "--- Reconnecting ---");
+            connection.open();
+            logger.log(Level.INFO, "--- Subscription connection opened ---");
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+    }   
+    
+    
 
 }

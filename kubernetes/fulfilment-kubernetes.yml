@@ -1,0 +1,28 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: fulfilment
+  namespace: comd
+spec:  
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fulfilment
+        tier: background
+    spec:
+      hostname: fulfilment
+      containers:
+        - name: request-fulfilment
+          image: maliska/payslip-fulfilment:latest
+          imagePullPolicy: IfNotPresent
+        #resources:
+        #  requests:
+        #  cpu: 100m
+        #  memory: 100Mi
+          env:
+          - name: BOOTSTRAP_SERVERS
+            value: kafka:29092 
+          ports:
+          - containerPort: 8081
