@@ -86,7 +86,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
                 payloads
         );
 
-        logger.log(Level.INFO, "--- PayslipGeneratedEvent created: {0} ---", event);
+        logger.log(Level.FINE, "--- PayslipGeneratedEvent created: {0} ---", event);
         
         return event;
     }

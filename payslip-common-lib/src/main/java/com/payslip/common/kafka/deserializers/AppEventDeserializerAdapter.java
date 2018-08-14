@@ -33,7 +33,7 @@ public class AppEventDeserializerAdapter implements JsonDeserializer<AppEvent> {
 
         try {
             AppEvent appEvent = context.deserialize(element, Class.forName(type));
-            logger.log(Level.INFO, "--- returning deserialized AppEvent:{0} ---", appEvent);
+            logger.log(Level.INFO, "--- returning deserialized AppEvent---");
             return appEvent;
         } catch (ClassNotFoundException cnfe) {
             throw new JsonParseException("Unknown element type: " + type, cnfe);

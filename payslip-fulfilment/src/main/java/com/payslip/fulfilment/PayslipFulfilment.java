@@ -46,7 +46,7 @@ public class PayslipFulfilment {
     Event<AppEvent> events;
 
     public void handle(@Observes PayslipRequested event) {
-        logger.log(Level.INFO, "--- Handling event {0} ---", event);
+        logger.log(Level.INFO, "--- Handling event id: {0} ---", event.getId());
         fulfilmentService.when(event);
     }
 

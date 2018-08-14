@@ -29,7 +29,7 @@ public class AppEventSerializerAdapter implements JsonSerializer<AppEvent> {
         result.add("type", new JsonPrimitive(event.getClass().getName()));
         result.add("properties", context.serialize(event, event.getClass()));
 
-        logger.log(Level.INFO, "--- returning JsonObject: {0} ---", result);
+        logger.log(Level.INFO, "--- returning JsonObject: {0} ---");
         return result;
     }
 

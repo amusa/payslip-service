@@ -26,6 +26,8 @@ services:
         - zk_data:/var/lib/zookeeper/data
         - zk_secret:/etc/zookeeper/secrets
         - zk_log:/var/lib/zookeeper/log
+    ports:
+      - "32181:2181"
    
   kafka:
     image: confluentinc/cp-kafka:latest  
@@ -42,7 +44,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
-      - "29092:29092"
+      - "29092:9092"
     volumes:
         - kafka_data:/var/lib/kafka/data
         - kafka_secret:/etc/kafka/secrets

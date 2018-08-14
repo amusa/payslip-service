@@ -168,7 +168,7 @@ public class JCoPayslipService implements PayslipService {
 
                         byte[] payslip = bapiPayslipPdfFunction.getExportParameterList().getByteArray("PAYSLIP");
 
-                        logger.log(Level.INFO, "--- Data returned for Staff {0}: {1} ---", new Object[]{staffId, payslip});
+                        logger.log(Level.INFO, "--- Payslip Pdf returned  ---");
 
                         PayData payData = new PayData(staffId, payslip, payDate, offCycleReason);
                         payDataList.add(payData);
@@ -189,7 +189,7 @@ public class JCoPayslipService implements PayslipService {
             JCoContext.end(destination);
         }
 
-        logger.log(Level.INFO, "--- Returning pay data list --- {0}", payDataList);
+        logger.log(Level.INFO, "--- Returning pay data list ---");
 
         return payDataList;
     }

@@ -46,12 +46,12 @@ public class NotificationService {
     Messenger messenger;
 
     public void handle(@Observes PayslipGenerated event) {
-        logger.log(Level.INFO, "--- Handling PayslipGenerated event {0} ---", event);
+        logger.log(Level.INFO, "--- Handling PayslipGenerated event ---");
         messenger.when(event);
     }
 
     public void handle(@Observes Notification event) {
-        logger.log(Level.INFO, "--- Handling Notification event {0} ---", event);
+        logger.log(Level.INFO, "--- Handling Notification event ---");
         messenger.when(event);
     }
 
