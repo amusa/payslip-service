@@ -27,7 +27,7 @@ public class PayPeriod {
     }
 
     public PayPeriod(int year, int month) {
-        this.year = year;
+        this.year = rightSize(year);
         this.month = month;
     }
 
@@ -41,21 +41,13 @@ public class PayPeriod {
         return year;
     }
 
-    public void setYear(int year) {
-        this.year = year;
-    }
-
     public int getMonth() {
         return month;
     }
 
-    public void setMonth(int month) {
-        this.month = month;
-    }
-
     public Date getDate(MonthMarker marker) {
         LocalDate payDate;
-        
+
         if (marker == MonthMarker.END) {
             payDate = YearMonth.of(year, month).atEndOfMonth();
         } else {
@@ -73,5 +65,9 @@ public class PayPeriod {
 
     public Date getDate() {
         return getDate(MonthMarker.BEGIN);
+    }
+
+    private int rightSize(int year) {
+        return (year % 2000) + 2000;
     }
 }
