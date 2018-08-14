@@ -5,26 +5,22 @@
  */
 package com.payslip.fulfilment;
 
+import com.payslip.common.events.AppEvent;
 import com.payslip.fulfilment.infrastructure.jco.PayData;
-import com.payslip.lib.common.events.MonthMarker;
-import com.payslip.lib.common.events.PayslipRequested;
-import com.sap.conn.jco.JCoException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import com.payslip.common.events.MonthMarker;
+import com.payslip.common.events.Notification;
+import com.payslip.common.events.Payload;
+import com.payslip.common.events.PayslipGenerated;
+import com.payslip.common.events.PayslipRequested;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
-import microsoft.exchange.webservices.data.core.ExchangeService;
-import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
-import microsoft.exchange.webservices.data.core.service.item.EmailMessage;
-import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
-import microsoft.exchange.webservices.data.credential.WebCredentials;
-import microsoft.exchange.webservices.data.property.complex.EmailAddress;
-import microsoft.exchange.webservices.data.property.complex.MessageBody;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 
 /**
  *
@@ -33,29 +29,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class DefaultFulfilmentService implements FulfilmentService {
 
-    private ExchangeService service;
-    private static final Logger logger = Logger.getLogger(DefaultFulfilmentService.class.getName());
-
-    @Inject
-    @ConfigProperty(name = "EWS_HOST")
-    private String ewsHost;
-
-    @Inject
-    @ConfigProperty(name = "EWS_USER")
-    private String ewsUser;
-
-    @Inject
-    @ConfigProperty(name = "EWS_PASSWORD")
-    private String ewsPwd;
-
-    @Inject
-    @ConfigProperty(name = "EWS_DOMAIN")
-    private String ewsDomain;
-
-    private String ewsUrl;
-
+     private static final Logger logger = Logger.getLogger(DefaultFulfilmentService.class.getName());
+   
     @Inject
     private PayslipService payslipService;
+
+    @Inject
+    Event<AppEvent> events;
 
     @Override
     public void when(PayslipRequested request) {
@@ -69,60 +49,60 @@ public class DefaultFulfilmentService implements FulfilmentService {
                             request.getPeriodFrom().getDate(),
                             request.getPeriodTo().getDate(MonthMarker.END));
 
-            sendEmail(request, payDataList);
-        } catch (JCoException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            PayslipGenerated event = makePayslipGeneratedEvent(request, payDataList);
+            events.fire(event);
+           
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "--- firing notification for error message {0} ---", ex.getMessage());
+            
+            Notification notice = new Notification(
+                    request.getEmailFrom(),
+                    request.getDateSent(),                   
+                    request.getId(),
+                    request.getSubject(),
+                    ex.getMessage()
+            );
+            
+            events.fire(notice);
         }
 
     }
 
     @PostConstruct
-    private void initConsumer() {
-        logger.log(Level.INFO, "--- Initializing Default Fulfilment Service ---");
-        ewsUrl = String.format("https://%s/EWS/Exchange.asmx", ewsHost);
-        service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-
-        // Provide Crendentials
-        ExchangeCredentials credentials = new WebCredentials(ewsUser,
-                ewsPwd, ewsDomain);
-        service.setCredentials(credentials);
-
-        try {
-            service.setUrl(new URI(ewsUrl));
-        } catch (URISyntaxException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
+    private void initConsumer() { 
         logger.log(Level.INFO, "--- Default Fulfilment Service Initialized ---");
     }
 
-    private void sendEmail(PayslipRequested request, List<PayData> payDataList) {
+    private PayslipGenerated makePayslipGeneratedEvent(PayslipRequested request, List<PayData> payDataList) {
+        List<Payload> payloads = makePayload(payDataList);
+        
+        PayslipGenerated event = new PayslipGenerated(
+                request.getEmailFrom(),
+                request.getDateSent(),
+                request.getStaffId(),
+                request.getId(),
+                request.getSubject(),
+                payloads
+        );
 
-        try {
-            EmailMessage msg = new EmailMessage(service);
-            msg.setSubject("Payslip Fulfilment");
-            msg.setBody(MessageBody.getMessageBodyFromText("Here comes your payslip as requested"));
-            EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
-            msg.getToRecipients().add(request.getEmailFrom());
-            msg.setFrom(fromEmail);
-
-            logger.log(Level.INFO, "--- Attaching payslip ---");
-
-            for (PayData pd : payDataList) {
-                String fileName = createFileName(pd);
-                msg.getAttachments().addFileAttachment(fileName, pd.getPayslipPdf());
-            }
-            logger.log(Level.INFO, "--- Sending email ---");
-            msg.send();
-        } catch (Exception ex1) {
-            logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
-        }
-
+        logger.log(Level.INFO, "--- PayslipGeneratedEvent created: {0} ---", event);
+        
+        return event;
     }
 
+    private List<Payload> makePayload(List<PayData> payDataList) {
+        List<Payload> payload = new ArrayList<>();
+
+        for (PayData pd : payDataList) {
+            String fileName = createFileName(pd);
+            Payload pl = new Payload(pd.getPayslipPdf(), fileName);
+            payload.add(pl);
+        }
+
+        return payload;
+    }
+    
     private String createFileName(PayData pd) {
         String payType;
 

@@ -31,6 +31,10 @@ services:
       - kafka
     environment:      
       - bootstrap.servers=localhost:39092 
+      - EWS_HOST=mail.nnpcgroup.com
+      - EWS_USER=18359
+      - EWS_PASSWORD=M@dan1sc0
+      - EWS_DOMAIN=chq
        
     network_mode: host
     
@@ -43,7 +47,18 @@ services:
     depends_on:
       - kafka
     environment:     
-      bootstrap.servers: localhost:39092         
+      bootstrap.servers: localhost:39092
+      JCO_ASHOST: 10.0.64.37
+      JCO_SYSNR: 00
+      JCO_CLIENT: 300
+      JCO_USER: 18359
+      JCO_PASSWD: 123456
+     
+     #EWS
+      EWS_HOST: mail.nnpcgroup.com
+      EWS_USER: 18359
+      EWS_PASSWORD: M@dan1sc0
+      EWS_DOMAIN: chq      
       
     network_mode: host  
       

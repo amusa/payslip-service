@@ -22,6 +22,17 @@ services:
     networks:
       - paynet
       
+  notification:
+    image: maliska/payslip-notification:latest 
+    #container_name: request_fulfilment
+    #restart: always
+    #ports:
+    #  - "8081:8081"
+    environment:           
+      - BOOTSTRAP_SERVERS=kafka:29092      
+    networks:
+      - paynet
+      
 networks:
     paynet:
         external: true

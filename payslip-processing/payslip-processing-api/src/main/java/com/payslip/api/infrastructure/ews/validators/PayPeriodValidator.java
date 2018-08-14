@@ -6,7 +6,7 @@
 package com.payslip.api.infrastructure.ews.validators;
 
 import com.payslip.api.infrastructure.ews.exceptions.PayPeriodException;
-import com.payslip.lib.common.events.PayPeriod;
+import com.payslip.common.events.PayPeriod;
 
 /**
  *

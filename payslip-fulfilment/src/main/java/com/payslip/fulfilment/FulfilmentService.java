@@ -5,7 +5,7 @@
  */
 package com.payslip.fulfilment;
 
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.common.events.PayslipRequested;
 
 /**
  *

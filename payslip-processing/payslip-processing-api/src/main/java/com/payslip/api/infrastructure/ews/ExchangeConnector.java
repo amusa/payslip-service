@@ -5,6 +5,7 @@
  */
 package com.payslip.api.infrastructure.ews;
 
+import com.payslip.api.infrastructure.kafka.EventPublisher;
 import com.payslip.api.infrastructure.ews.exceptions.PayPeriodException;
 import com.payslip.api.infrastructure.ews.exceptions.PayPeriodRangeValidator;
 import com.payslip.api.infrastructure.ews.validators.PayPeriodValidator;
@@ -12,11 +13,14 @@ import com.payslip.api.infrastructure.ews.validators.PayPeriodViewValidator;
 import com.payslip.api.infrastructure.ews.validators.ValidatorProcessor;
 import com.payslip.api.infrastructure.kafka.EventProducer;
 import com.payslip.api.util.RequestParser;
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.common.events.Notification;
+import com.payslip.common.events.PayslipRequested;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,7 +85,11 @@ public class ExchangeConnector implements StreamingSubscriber {
 
     @Inject
     EventProducer producer;
+//    @Inject
+//    EventPublisher<PayslipRequested> producer;
 
+//    @Inject
+//    EventPublisher<Notification> errorProducer;
     @PostConstruct
     private void init() {
         logger.log(Level.INFO, "--- initializing Exchange Connector ---");
@@ -147,33 +155,39 @@ public class ExchangeConnector implements StreamingSubscriber {
             try {
                 responses = service.bindToItems(newMailsIds, new PropertySet(ItemSchema.Subject));
 
-                logger.log(Level.INFO, "count=======" + responses.getCount());
+                logger.log(Level.INFO, "=== count: {0} ===", responses.getCount());
 
                 for (GetItemResponse response : responses) {
                     String subject = response.getItem().getSubject();
                     EmailMessage message = EmailMessage.bind(service, response.getItem().getId());
                     Pattern pattern = Pattern.compile("#PAYSLIP");
                     Matcher matcher = pattern.matcher(response.getItem().getSubject());
+
                     if (matcher.lookingAt()) {
                         logger.log(Level.INFO, "--- Processing new payslip request: {0} ---", response.getItem().getSubject());
-                        PayslipRequested emailRequest = RequestParser.parse(subject, message.getDateTimeSent(), message.getSender().getAddress());
-//                         PayslipRequested emailRequest2 = RequestParser.parse2(subject, message.getDateTimeSent(), message.getSender().getAddress());
-
-                        logger.log(Level.INFO, "--- validating request ---");
-                        validator.add(new PayPeriodValidator(emailRequest.getPeriodFrom()));
-                        validator.add(new PayPeriodValidator(emailRequest.getPeriodTo()));
-                        validator.add(new PayPeriodRangeValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
-                        validator.add(new PayPeriodViewValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+                        PayslipRequested emailRequest;
 
                         try {
+                            emailRequest = RequestParser.parse(subject, message.getDateTimeSent(), message.getSender().getAddress());
+//                         PayslipRequested emailRequest2 = RequestParser.parse2(subject, message.getDateTimeSent(), message.getSender().getAddress());
+
+                            logger.log(Level.INFO, "--- validating request ---");
+                            validator.add(new PayPeriodValidator(emailRequest.getPeriodFrom()));
+                            validator.add(new PayPeriodValidator(emailRequest.getPeriodTo()));
+                            validator.add(new PayPeriodRangeValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+                            validator.add(new PayPeriodViewValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+
                             validator.process();
                             logger.log(Level.INFO, "--- validation successful ---");
-                            logger.log(Level.INFO, "--- Publishing payslip requests to 'payslip.topic'");
-                            producer.publish(emailRequest);
+                            logger.log(Level.INFO, "--- Publishing payslip requests to topic '{0}'");
+                            producer.publish(emailRequest, false);
+                            logger.log(Level.INFO, "--- request published successfully ---");
                             response.getItem().delete(DeleteMode.MoveToDeletedItems);
-                        } catch (PayPeriodException ppe) {
+                            logger.log(Level.INFO, "--- mail deleted successfully ---");
+                        } catch (Exception ex) {
                             //TODO:publish notification to error topic
-                            logger.log(Level.WARNING, ppe.getMessage());
+                            logger.log(Level.WARNING, ex.getMessage());
+                            publishError(subject, message.getDateTimeSent(), message.getSender().getAddress(), UUID.randomUUID().toString(), ex.getMessage());
                         }
                     } else {
                         logger.log(Level.INFO, "--- Ignoring email: {0} ---", response.getItem().getSubject());
@@ -181,11 +195,23 @@ public class ExchangeConnector implements StreamingSubscriber {
 
                 }
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
+                //TODO: publish error message
             }
         }
 
+    }
+
+    private void publishError(String subject, Date dateSent, String senderEmail, String requestId, String msg) {
+        Notification errorOccurred = new Notification(
+                senderEmail,
+                dateSent,
+                requestId,
+                subject,
+                msg
+        );
+        logger.log(Level.INFO, "--- Publishing error notification to '{0}' topic");
+        producer.publish(errorOccurred, true);
     }
 
     @Override
@@ -202,8 +228,6 @@ public class ExchangeConnector implements StreamingSubscriber {
             logger.log(Level.SEVERE, null, ex);
         }
 
-    }   
-    
-    
+    }
 
 }

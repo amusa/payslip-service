@@ -5,7 +5,7 @@
  */
 package com.payslip.api.infrastructure.ews.validators;
 
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.common.events.PayslipRequested;
 
 /**
  *

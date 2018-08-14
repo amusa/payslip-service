@@ -87,7 +87,7 @@ public class JCoPayslipService implements PayslipService {
         connectProperties.setProperty(DestinationDataProvider.JCO_POOL_CAPACITY, jcoPoolCapacity);
         connectProperties.setProperty(DestinationDataProvider.JCO_PEAK_LIMIT, jcoPeakLimit);
         createDestinationDataFile(sapRfcDestination, connectProperties);
-        logger.info("Jco service initialized...");
+        logger.log(Level.INFO, "--- Jco service initialized ---\n{0}", connectProperties);
     }
 
     private void createDestinationDataFile(String destinationName, Properties connectProperties) {
@@ -173,12 +173,13 @@ public class JCoPayslipService implements PayslipService {
 
                     } catch (AbapException ex) {
                         logger.log(Level.SEVERE, "Error executing ZBAPI_GET_PAYSLIP_PDF.");
+                        throw new RuntimeException("Error executing ZBAPI_GET_PAYSLIP_PDF.");
                     }
                 }
 
             } catch (AbapException ex) {
                 logger.log(Level.SEVERE, "Error executing ZBAPI_GET_PAYROLL_RESULT_LIST.");
-
+                throw new RuntimeException("Error executing ZBAPI_GET_PAYROLL_RESULT_LIST.");
             }
         } catch (JCoException ex) {
             logger.log(Level.SEVERE, ex.getMessage());

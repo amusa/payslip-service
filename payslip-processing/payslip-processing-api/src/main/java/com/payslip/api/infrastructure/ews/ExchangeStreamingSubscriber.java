@@ -12,7 +12,7 @@ import com.payslip.api.infrastructure.ews.exceptions.PayPeriodRangeValidator;
 import com.payslip.api.infrastructure.ews.validators.PayPeriodValidator;
 import com.payslip.api.infrastructure.ews.validators.PayPeriodViewValidator;
 import com.payslip.api.infrastructure.ews.validators.ValidatorProcessor;
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.common.events.PayslipRequested;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,7 +46,8 @@ public class ExchangeStreamingSubscriber implements StreamingSubscriber {
 
     private EventProducer producer;
 
-   private static ExchangeService service;
+    private static ExchangeService service;
+
     public ExchangeStreamingSubscriber(EventProducer producer) {
 
         this.producer = producer;
@@ -56,7 +57,7 @@ public class ExchangeStreamingSubscriber implements StreamingSubscriber {
     public void notificationEventDelegate(Object sender, NotificationEventArgs nev) {
         System.out.println("--- notification event ---");
         logger.log(Level.INFO, "--- Calling ews.getService() ---");
-        
+
         // First retrieve the IDs of all the new emails
         List<ItemId> newMailsIds = new ArrayList<ItemId>();
 
@@ -98,7 +99,7 @@ public class ExchangeStreamingSubscriber implements StreamingSubscriber {
                             validator.process();
                             logger.log(Level.INFO, "--- validation successful ---");
                             logger.log(Level.INFO, "--- Publishing payslip requests to 'payslip.topic'");
-                            producer.publish(emailRequest);
+                            producer.publish(emailRequest, false);
                             response.getItem().delete(DeleteMode.MoveToDeletedItems);
                         } catch (PayPeriodException ppe) {
                             //TODO:publish notification to error topic
@@ -131,7 +132,5 @@ public class ExchangeStreamingSubscriber implements StreamingSubscriber {
         }
 
     }
-
-    
 
 }

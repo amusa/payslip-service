@@ -1,8 +1,10 @@
 package com.payslip.fulfilment;
 
+import com.payslip.common.events.AppEvent;
 import com.payslip.fulfilment.kafka.EventConsumer;
+import com.payslip.common.events.PayslipRequested;
 import com.payslip.fulfilment.kafka.KAFKA;
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.fulfilment.kafka.REQUEST;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -41,7 +43,7 @@ public class PayslipFulfilment {
     Properties kafkaProperties;
 
     @Inject
-    Event<PayslipRequested> events;
+    Event<AppEvent> events;
 
     public void handle(@Observes PayslipRequested event) {
         logger.log(Level.INFO, "--- Handling event {0} ---", event);
@@ -60,7 +62,7 @@ public class PayslipFulfilment {
         kafkaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "payslip-processor");
         kafkaProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, UUID.randomUUID().toString());
         logger.log(Level.INFO, "--- initializing service with properties: {0} ---\n", kafkaProperties);
-        String payslips = kafkaProperties.getProperty("payslip.topic");
+        String payslips = kafkaProperties.getProperty("payslip.request.topic");
 
         eventConsumer = new EventConsumer(kafkaProperties, ev -> {
             logger.log(Level.INFO, "firing = {0}", ev);

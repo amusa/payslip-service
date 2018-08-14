@@ -1,6 +1,7 @@
 package com.payslip.fulfilment.kafka;
 
-import com.payslip.lib.common.events.PayslipRequested;
+import com.payslip.common.events.AppEvent;
+import com.payslip.common.events.PayslipRequested;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,11 +19,11 @@ public class EventConsumer implements Runnable {
 
     private static final Logger logger = Logger.getLogger(EventConsumer.class.getName());
 
-    private final KafkaConsumer<String, PayslipRequested> consumer;
-    private final Consumer<PayslipRequested> eventConsumer;
+    private final KafkaConsumer<String, AppEvent> consumer;
+    private final Consumer<AppEvent> eventConsumer;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public EventConsumer(Properties kafkaProperties, Consumer<PayslipRequested> eventConsumer, String... topics) {
+    public EventConsumer(Properties kafkaProperties, Consumer<AppEvent> eventConsumer, String... topics) {
         this.eventConsumer = eventConsumer;
         consumer = new KafkaConsumer<>(kafkaProperties);
         consumer.subscribe(asList(topics));
@@ -48,10 +49,10 @@ public class EventConsumer implements Runnable {
 
     private void consume() {
         logger.info("--- Listening for events");
-        ConsumerRecords<String, PayslipRequested> records = consumer.poll(Long.MAX_VALUE);
+        ConsumerRecords<String, AppEvent> records = consumer.poll(Long.MAX_VALUE);
         logger.log(Level.INFO, "--- Events found: {0}", records.count());
 
-        for (ConsumerRecord<String, PayslipRequested> record : records) {
+        for (ConsumerRecord<String, AppEvent> record : records) {
             logger.log(Level.INFO, "--- Processing events: {0}", record.value());
             eventConsumer.accept(record.value());
         }
