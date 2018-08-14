@@ -161,7 +161,7 @@ public class ExchangeConnector implements StreamingSubscriber {
                     String subject = response.getItem().getSubject();
                     EmailMessage message = EmailMessage.bind(service, response.getItem().getId());
                     Pattern pattern = Pattern.compile("#PAYSLIP");
-                    Matcher matcher = pattern.matcher(response.getItem().getSubject());
+                    Matcher matcher = pattern.matcher(response.getItem().getSubject().toUpperCase());
 
                     if (matcher.lookingAt()) {
                         logger.log(Level.INFO, "--- Processing new payslip request: {0} ---", response.getItem().getSubject());

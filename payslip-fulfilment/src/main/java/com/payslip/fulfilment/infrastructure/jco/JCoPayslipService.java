@@ -105,6 +105,8 @@ public class JCoPayslipService implements PayslipService {
 
     @Override
     public List<PayData> getPayslipBytes(String staffId, Date dateFrom, Date dateTo) throws JCoException {
+        logger.log(Level.INFO, "--- getPayslipBytes called with parameters: StaffId={0}, dateFrom={1}, dateTo={2} ---",
+                new Object[]{staffId, dateFrom, dateTo});
         List<PayData> payDataList = new ArrayList<>();
 
         JCoDestination destination = JCoDestinationManager.getDestination(sapRfcDestination);
