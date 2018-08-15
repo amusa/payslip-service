@@ -12,6 +12,8 @@ volumes:
     driver: local
   zk_log:
     driver: local
+  control_center_data:
+    driver: local
     
 services:
   zookeeper:
@@ -50,6 +52,25 @@ services:
     volumes:
         - kafka_data:/var/lib/kafka/data
         - kafka_secret:/etc/kafka/secrets
+        
+  control_center:
+    image: confluentinc/cp-control-center:latest
+    container_name: control_center
+    networks:
+      - paynet
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: zookeeper:32181
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:29092
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_CONNECT_CLUSTER: http://control_center:28082
+    ports:      
+      - "9021:9021"
+    volumes:
+       # - /mnt/control-center/data:/var/lib/confluent-control-center
+        - control_center_data:/var/lib/confluent-control-center
     
 networks:
     paynet:
