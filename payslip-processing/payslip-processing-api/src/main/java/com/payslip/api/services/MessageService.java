@@ -3,18 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.payslip.fulfilment;
+package com.payslip.api.services;
 
-import com.payslip.common.events.AppEvent;
+import com.payslip.api.infrastructure.kafka.EventPublisher;
 import com.payslip.common.events.Notification;
-import com.payslip.fulfilment.kafka.EventPublisher;
-import com.payslip.common.events.PayslipGenerated;
-import com.payslip.fulfilment.kafka.EventProducer;
+import com.payslip.common.events.PayslipRequested;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -22,29 +19,26 @@ import javax.inject.Inject;
  *
  * @author maliska
  */
-@Singleton
-@Startup
+@ApplicationScoped
 public class MessageService {
-
     private static final Logger logger = Logger.getLogger(MessageService.class.getName());
 
     @Inject
-    EventPublisher<PayslipGenerated> payslipPublisher;
+    EventPublisher<PayslipRequested> requestPublisher;
 
     @Inject
     EventPublisher<Notification> noticePublisher;
 
-//    @Inject
-//    EventProducer producer;
+
     @PostConstruct
     private void init() {
         logger.log(Level.INFO, "--- MessageService initialized ---");
     }
 
-    public void handle(@Observes PayslipGenerated event) {
-        logger.log(Level.INFO, "--- publishing payslip response to topic '{0}'", payslipPublisher.getTopic());
-        payslipPublisher.publish(event);
-        logger.log(Level.INFO, "--- payslip response published successfully ---");
+    public void handle(@Observes PayslipRequested event) {
+        logger.log(Level.INFO, "--- publishing payslip request to topic '{0}'", requestPublisher.getTopic());
+        requestPublisher.publish(event);
+        logger.log(Level.INFO, "--- payslip request published successfully ---");
     }
 
     public void handle(@Observes Notification event) {

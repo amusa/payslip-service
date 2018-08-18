@@ -29,8 +29,6 @@ public class AppEventDeserializerAdapter implements JsonDeserializer<AppEvent> {
         String type = jsonObject.get("type").getAsString();
         JsonElement element = jsonObject.get("properties");
 
-        logger.log(Level.INFO, "--- type:{0}, properties:{1} ---", new Object[]{type, element});
-
         try {
             AppEvent appEvent = context.deserialize(element, Class.forName(type));
             logger.log(Level.INFO, "--- returning deserialized AppEvent---");

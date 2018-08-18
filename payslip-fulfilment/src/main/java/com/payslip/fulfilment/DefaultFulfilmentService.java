@@ -12,6 +12,8 @@ import com.payslip.common.events.Notification;
 import com.payslip.common.events.Payload;
 import com.payslip.common.events.PayslipGenerated;
 import com.payslip.common.events.PayslipRequested;
+import com.payslip.common.events.PayslipResponse;
+import com.payslip.fulfilment.mongodb.MongoDbPayslipClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,7 +23,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-
 /**
  *
  * @author maliska
@@ -29,13 +30,16 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class DefaultFulfilmentService implements FulfilmentService {
 
-     private static final Logger logger = Logger.getLogger(DefaultFulfilmentService.class.getName());
-   
+    private static final Logger logger = Logger.getLogger(DefaultFulfilmentService.class.getName());
+
     @Inject
     private PayslipService payslipService;
 
     @Inject
     Event<AppEvent> events;
+
+    @Inject
+    MongoDbPayslipClient dbClient;
 
     @Override
     public void when(PayslipRequested request) {
@@ -49,45 +53,43 @@ public class DefaultFulfilmentService implements FulfilmentService {
                             request.getPeriodFrom().getDate(),
                             request.getPeriodTo().getDate(MonthMarker.END));
 
-            PayslipGenerated event = makePayslipGeneratedEvent(request, payDataList);
+            PayslipGenerated event = upsertPayslip(request, payDataList);
             events.fire(event);
-           
+
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             logger.log(Level.SEVERE, "--- firing notification for error message {0} ---", ex.getMessage());
-            
+
             Notification notice = new Notification(
                     request.getEmailFrom(),
-                    request.getDateSent(),                   
+                    request.getDateSent(),
                     request.getId(),
                     request.getSubject(),
                     ex.getMessage()
             );
-            
+
             events.fire(notice);
         }
 
     }
 
     @PostConstruct
-    private void initConsumer() { 
+    private void initConsumer() {
         logger.log(Level.INFO, "--- Default Fulfilment Service Initialized ---");
     }
 
-    private PayslipGenerated makePayslipGeneratedEvent(PayslipRequested request, List<PayData> payDataList) {
-        List<Payload> payloads = makePayload(payDataList);
-        
+    private PayslipGenerated makePayslipGeneratedEvent(PayslipRequested request, String refId) {        
         PayslipGenerated event = new PayslipGenerated(
                 request.getEmailFrom(),
                 request.getDateSent(),
                 request.getStaffId(),
                 request.getId(),
                 request.getSubject(),
-                payloads
+                refId
         );
 
-        logger.log(Level.FINE, "--- PayslipGeneratedEvent created: {0} ---", event);
-        
+        logger.log(Level.FINE, "\n--- PayslipGeneratedEvent created: {0} ---", event);
+
         return event;
     }
 
@@ -102,7 +104,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
 
         return payload;
     }
-    
+
     private String createFileName(PayData pd) {
         String payType;
 
@@ -121,5 +123,24 @@ public class DefaultFulfilmentService implements FulfilmentService {
 
     private String sanitize(String text) {
         return text.replaceAll("[^a-zA-Z0-9.-]", "_");
+    }
+
+    private PayslipGenerated upsertPayslip(PayslipRequested request, List<PayData> payDataList) {
+        PayslipResponse payResonse = makePayslipResponse(request, payDataList);
+        String referenceId = dbClient.putPayslip(payResonse);
+        if (referenceId != null) {
+            return makePayslipGeneratedEvent(request, referenceId);
+        }
+        return null;
+    }
+
+    private PayslipResponse makePayslipResponse(PayslipRequested request, List<PayData> payDataList) {
+        PayslipResponse payslipResponse = new PayslipResponse();
+        payslipResponse.setEmailFrom(request.getEmailFrom());
+        payslipResponse.setDateSent(request.getDateSent());
+        payslipResponse.setRequestId(request.getId());
+        payslipResponse.setPayloads(makePayload(payDataList));
+
+        return payslipResponse;
     }
 }

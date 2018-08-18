@@ -13,6 +13,7 @@ import com.payslip.api.infrastructure.ews.validators.PayPeriodViewValidator;
 import com.payslip.api.infrastructure.ews.validators.ValidatorProcessor;
 import com.payslip.api.infrastructure.kafka.EventProducer;
 import com.payslip.api.util.RequestParser;
+import com.payslip.common.events.AppEvent;
 import com.payslip.common.events.Notification;
 import com.payslip.common.events.PayslipRequested;
 import java.net.URI;
@@ -29,6 +30,7 @@ import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import microsoft.exchange.webservices.data.core.ExchangeService;
 import microsoft.exchange.webservices.data.core.PropertySet;
@@ -84,10 +86,12 @@ public class ExchangeConnector implements StreamingSubscriber {
     private String ewsUrl;
 
     @Inject
-    EventProducer producer;
+    Event<AppEvent> events;
+
+//    @Inject
+//    EventProducer producer;
 //    @Inject
 //    EventPublisher<PayslipRequested> producer;
-
 //    @Inject
 //    EventPublisher<Notification> errorProducer;
     @PostConstruct
@@ -180,7 +184,10 @@ public class ExchangeConnector implements StreamingSubscriber {
                             validator.process();
                             logger.log(Level.INFO, "--- validation successful ---");
                             logger.log(Level.INFO, "--- Publishing payslip requests to topic '{0}'");
-                            producer.publish(emailRequest, false);
+
+                            //producer.publish(emailRequest, false);
+                            fireEvent(emailRequest);
+
                             logger.log(Level.INFO, "--- request published successfully ---");
                             response.getItem().delete(DeleteMode.MoveToDeletedItems);
                             logger.log(Level.INFO, "--- mail deleted successfully ---");
@@ -211,7 +218,8 @@ public class ExchangeConnector implements StreamingSubscriber {
                 msg
         );
         logger.log(Level.INFO, "--- Publishing error notification to '{0}' topic");
-        producer.publish(errorOccurred, true);
+        //producer.publish(errorOccurred, true);
+        fireEvent(errorOccurred);
     }
 
     @Override
@@ -228,6 +236,10 @@ public class ExchangeConnector implements StreamingSubscriber {
             logger.log(Level.SEVERE, null, ex);
         }
 
+    }
+
+    private void fireEvent(AppEvent event) {
+        events.fire(event);
     }
 
 }

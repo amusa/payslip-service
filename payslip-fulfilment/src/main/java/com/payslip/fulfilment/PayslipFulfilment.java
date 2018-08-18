@@ -38,7 +38,7 @@ public class PayslipFulfilment {
     int initialDelay = 0;
     int period = 1;
 
-    @KAFKA
+    @REQUEST
     @Inject
     Properties kafkaProperties;
 
@@ -62,7 +62,7 @@ public class PayslipFulfilment {
         kafkaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "payslip-processor");
         kafkaProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, UUID.randomUUID().toString());
         logger.log(Level.INFO, "--- initializing service with properties: {0} ---\n", kafkaProperties);
-        String payslips = kafkaProperties.getProperty("payslip.request.topic");
+        String payslips = kafkaProperties.getProperty("payslip.topic");
 
         eventConsumer = new EventConsumer(kafkaProperties, ev -> {
             logger.log(Level.INFO, "firing = {0}", ev);

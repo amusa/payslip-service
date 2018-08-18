@@ -49,7 +49,7 @@ public class PayslipPublisher extends EventPublisher<PayslipGenerated> {
 
     @Override
     public String getTopic() {
-        String topic = kafkaProperties.getProperty("payslip.response.topic");
+        String topic = kafkaProperties.getProperty("payslip.topic");
         return topic;
     }
 

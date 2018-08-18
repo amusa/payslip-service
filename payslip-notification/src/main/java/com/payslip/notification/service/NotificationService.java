@@ -67,12 +67,13 @@ public class NotificationService {
         kafkaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "payslip-notification");
         kafkaProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, UUID.randomUUID().toString());
         logger.log(Level.INFO, "--- initializing service with properties: {0} ---\n", kafkaProperties);
-        String payslips = kafkaProperties.getProperty("payslip.response.topic");
+        String payslips = kafkaProperties.getProperty("payslip.payslip.topic");
+        String notices = kafkaProperties.getProperty("payslip.response.topic");
 
         eventConsumer = new EventConsumer(kafkaProperties, ev -> {
             logger.log(Level.INFO, "firing = {0}", ev);
             events.fire(ev);
-        }, payslips);
+        }, payslips, notices);
 
         logger.log(Level.INFO, "--- Submitting eventconsumer task {0} ---", mes.toString());
         mes.submit(eventConsumer);

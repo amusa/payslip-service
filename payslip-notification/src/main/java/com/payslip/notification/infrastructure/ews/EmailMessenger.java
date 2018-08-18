@@ -9,6 +9,8 @@ import com.payslip.notification.service.Messenger;
 import com.payslip.common.events.Notification;
 import com.payslip.common.events.Payload;
 import com.payslip.common.events.PayslipGenerated;
+import com.payslip.common.events.PayslipResponse;
+import com.payslip.notification.infrastructure.mongodb.MongoDbPayslipClient;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -36,6 +38,9 @@ public class EmailMessenger implements Messenger {
     private static final Logger logger = Logger.getLogger(EmailMessenger.class.getName());
 
     @Inject
+    MongoDbPayslipClient dbClient;
+
+    @Inject
     @ConfigProperty(name = "EWS_HOST")
     private String ewsHost;
 
@@ -56,24 +61,30 @@ public class EmailMessenger implements Messenger {
     @Override
     public void when(PayslipGenerated event) {
         logger.log(Level.INFO, "--- PayslipGenerated Event received for processing ---");
-        try {
-            EmailMessage msg = new EmailMessage(service);
-            msg.setSubject(String.format("RE:%s", event.getSubject()));
-            msg.setBody(MessageBody.getMessageBodyFromText("Please find attached your payslip(s) as requested"));
-            EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
-            msg.getToRecipients().add(event.getEmailFrom());
-            msg.setFrom(fromEmail);
 
-            logger.log(Level.INFO, "--- Attaching payslip ---");
+        PayslipResponse payslipResponse = dbClient.getPayslipResponse(event.getReferenceId());
 
-            for (Payload pl : event.getPayloads()) {
-                msg.getAttachments().addFileAttachment(pl.getPdfFileName(), pl.getPayslipPdf());
+        if (payslipResponse != null) {
+            logger.log(Level.INFO, "--- payslip response retried from db ---");
+            try {
+                EmailMessage msg = new EmailMessage(service);
+                msg.setSubject(String.format("RE:%s", event.getSubject()));
+                msg.setBody(MessageBody.getMessageBodyFromText("Please find attached your payslip(s) as requested"));
+                EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
+                msg.getToRecipients().add(event.getEmailFrom());
+                msg.setFrom(fromEmail);
+
+                logger.log(Level.INFO, "--- Attaching payslip ---");
+
+                for (Payload pl : payslipResponse.getPayloads()) {
+                    msg.getAttachments().addFileAttachment(pl.getPdfFileName(), pl.getPayslipPdf());
+                }
+
+                logger.log(Level.INFO, "--- Sending email ---");
+                msg.send();
+            } catch (Exception ex1) {
+                logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
             }
-
-            logger.log(Level.INFO, "--- Sending email ---");
-            msg.send();
-        } catch (Exception ex1) {
-            logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
         }
 
     }
@@ -88,7 +99,7 @@ public class EmailMessenger implements Messenger {
             EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
             msg.getToRecipients().add(event.getEmailFrom());
             msg.setFrom(fromEmail);
-            
+
             logger.log(Level.INFO, "--- Sending email ---");
             msg.send();
         } catch (Exception ex1) {

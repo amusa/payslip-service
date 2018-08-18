@@ -37,22 +37,22 @@ public class EventConsumer implements Runnable {
             }
         } catch (WakeupException e) {
             // will wakeup for closing
-            logger.log(Level.INFO, "--- WakeupExcepion: {0}", e);
+            logger.log(Level.INFO, "--- WakeupExcepion: {0} ---", e);
         } catch (Exception ex) {
-            logger.log(Level.INFO, "--- Catch-all exception: {0}", ex);
+            logger.log(Level.INFO, "--- Catch-all exception: {0} ---", ex);
         } finally {
-            logger.log(Level.INFO, "--- Closing consumer closed.get()={0}", closed.get());
+            logger.log(Level.INFO, "--- Closing consumer closed.get()={0} ---", closed.get());
             consumer.close();
         }
     }
 
     private void consume() {
-        logger.info("--- Listening for events");
+        logger.info("--- Listening for events ---");
         ConsumerRecords<String, AppEvent> records = consumer.poll(Long.MAX_VALUE);
         logger.log(Level.INFO, "--- Events found: {0}", records.count());
 
         for (ConsumerRecord<String, AppEvent> record : records) {
-            logger.log(Level.INFO, "--- Processing events: {0}", record.value());
+            logger.log(Level.INFO, "--- Processing events: {0} ---", record.value());
             eventConsumer.accept(record.value());
         }
 
@@ -60,7 +60,7 @@ public class EventConsumer implements Runnable {
     }
 
     public void stop() {
-        logger.info("--- Stopping EventConsumer");
+        logger.info("--- Stopping EventConsumer ---");
         closed.set(true);
         consumer.wakeup();
     }

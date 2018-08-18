@@ -49,7 +49,7 @@ public class RequestEventPublisher extends EventPublisher<PayslipRequested> {
 
     @Override
     public String getTopic() {
-        String topic = kafkaProperties.getProperty("payslip.request.topic");
+        String topic = kafkaProperties.getProperty("payslip.topic");
         return topic;
     }
 
