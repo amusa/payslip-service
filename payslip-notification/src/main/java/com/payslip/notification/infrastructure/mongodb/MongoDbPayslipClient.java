@@ -9,7 +9,12 @@ import com.google.gson.Gson;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.Updates;
+import com.payslip.common.events.Notification;
 import com.payslip.common.events.PayslipResponse;
+import java.util.ArrayList;
+import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import org.bson.Document;
@@ -32,7 +37,7 @@ public class MongoDbPayslipClient {
     public PayslipResponse getPayslipResponse(String id) {
         Document payslipDoc = payslipCollection().find(eq("_id", new ObjectId(id))).first();
 
-        String payslipJson = com.mongodb.util.JSON.serialize(payslipDoc);
+        String payslipJson = payslipDoc.toJson();
 
         Gson gson = new Gson();
         PayslipResponse payResponse = gson.fromJson(payslipJson, PayslipResponse.class);
@@ -43,8 +48,81 @@ public class MongoDbPayslipClient {
 
     }
 
+    public void deletePayslip(String id) {
+        payslipCollection().deleteOne(eq("requestId", id));
+    }
+
+    public void deleteNotice(String id) {
+        noticeCollection().deleteOne(eq("id", id));
+    }
+
+    public long markAsFailed(String id) {
+        return payslipCollection().updateOne(
+                eq("requestId", id),
+                Updates.set("status", "FAILED"),
+                new UpdateOptions().upsert(true)).getModifiedCount();
+    }
+
+    public List<PayslipResponse> getPayslipsForRetry(String status) {
+        List<Document> payslipDocs = new ArrayList<>();
+        List<PayslipResponse> payslips = new ArrayList<>();
+
+        payslipCollection().find(eq("status", status)).into(payslipDocs);
+        Gson gson = new Gson();
+
+        for (Document doc : payslipDocs) {
+
+            PayslipResponse payResponse = gson.fromJson(doc.toJson(), PayslipResponse.class);
+            payslips.add(payResponse);
+
+        }
+
+        logger.log(Level.INFO, "--- payslips retrieved for retry successfully ---");
+
+        return payslips;
+
+    }
+
+    public List<Notification> getNoticesForRetry() {
+        List<Document> noticeDocs = new ArrayList<>();
+        List<Notification> notices = new ArrayList<>();
+
+        noticeCollection().find().into(noticeDocs);
+        Gson gson = new Gson();
+
+        for (Document doc : noticeDocs) {
+
+            Notification notice = gson.fromJson(doc.toJson(), Notification.class);
+            notices.add(notice);
+
+        }
+
+        logger.log(Level.INFO, "--- notices retrieved for retry successfully ---");
+
+        return notices;
+
+    }
+
+    public String putNoticeForRetry(Notification notice) {
+        Gson gson = new Gson();
+        String noticeJson = gson.toJson(notice);
+
+        Document noticeDoc = Document.parse(noticeJson);
+
+        logger.log(Level.INFO, "--- inserting notice to monogodb ---");
+        noticeCollection().insertOne(noticeDoc);
+        logger.log(Level.INFO, "--- notice inserted to monogodb successfully ---");
+
+        return noticeDoc.getObjectId("_id").toString();
+
+    }
+
     private MongoCollection<Document> payslipCollection() {
-        return mongoDb.getCollection("responses");
+        return mongoDb.getCollection("payslips");
+    }
+
+    private MongoCollection<Document> noticeCollection() {
+        return mongoDb.getCollection("notices");
     }
 
 }

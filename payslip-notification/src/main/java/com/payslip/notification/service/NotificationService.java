@@ -5,12 +5,14 @@ import com.payslip.common.events.Notification;
 import com.payslip.common.events.PayslipGenerated;
 import com.payslip.notification.infrastructure.kafka.EventConsumer;
 import com.payslip.notification.infrastructure.kafka.KAFKA;
+import com.payslip.notification.infrastructure.mongodb.MongoDbPayslipClient;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -19,6 +21,7 @@ import javax.annotation.Resource;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 @Singleton
@@ -30,10 +33,13 @@ public class NotificationService {
     @Resource
     ManagedExecutorService mes;
 
+    @Resource
+    ManagedScheduledExecutorService mses;
+
     private EventConsumer eventConsumer;
 
     int initialDelay = 0;
-    int period = 1;
+    int period = 2;
 
     @KAFKA
     @Inject
@@ -44,6 +50,9 @@ public class NotificationService {
 
     @Inject
     Messenger messenger;
+
+    @Inject
+    MongoDbPayslipClient dbClient;
 
     public void handle(@Observes PayslipGenerated event) {
         logger.log(Level.INFO, "--- Handling PayslipGenerated event ---");
@@ -75,8 +84,12 @@ public class NotificationService {
             events.fire(ev);
         }, payslips, notices);
 
+        ResponseWorker noticeWorker = new ResponseWorker(dbClient, messenger);
+
         logger.log(Level.INFO, "--- Submitting eventconsumer task {0} ---", mes.toString());
         mes.submit(eventConsumer);
+       
+        mses.scheduleAtFixedRate(noticeWorker, initialDelay, period, TimeUnit.MINUTES);
         logger.log(Level.INFO, "--- Event consumer scheduled with topic {0}", payslips);
     }
 

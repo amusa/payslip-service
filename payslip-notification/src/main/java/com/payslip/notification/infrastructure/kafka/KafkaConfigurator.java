@@ -26,7 +26,7 @@ public class KafkaConfigurator {
 
     @KAFKA
     @Produces
-    @RequestScoped
+    //@RequestScoped
     public Properties exposeKafkaProperties() throws IOException {
         final Properties properties = new Properties();
         properties.putAll(kafkaProperties);

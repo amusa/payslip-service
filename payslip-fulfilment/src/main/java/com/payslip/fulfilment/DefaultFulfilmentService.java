@@ -139,6 +139,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
         payslipResponse.setEmailFrom(request.getEmailFrom());
         payslipResponse.setDateSent(request.getDateSent());
         payslipResponse.setRequestId(request.getId());
+        payslipResponse.setSubject(request.getSubject());
         payslipResponse.setPayloads(makePayload(payDataList));
 
         return payslipResponse;

@@ -42,7 +42,7 @@ public class MongoDbPayslipClient {
     }
     
     private MongoCollection<Document> payslipCollection() {
-        return mongoDb.getCollection("responses");
+        return mongoDb.getCollection("payslips");
     }
     
 }

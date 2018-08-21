@@ -7,6 +7,7 @@ package com.payslip.notification.service;
 
 import com.payslip.common.events.Notification;
 import com.payslip.common.events.PayslipGenerated;
+import com.payslip.common.events.PayslipResponse;
 
 /**
  *
@@ -17,5 +18,8 @@ public interface Messenger {
     void when(PayslipGenerated request);
 
     void when(Notification event);
-    
+
+    void mailPayslip(PayslipResponse payslip, boolean retry);
+
+    void mailNotice(Notification notice, boolean retry);
 }

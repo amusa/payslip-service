@@ -14,19 +14,20 @@ import java.util.List;
  */
 public class PayslipResponse {
 
-    private String id;
+//    private String id;
     private String emailFrom;
     private Date dateSent;
     private String requestId;
+    private String subject;
     private List<Payload> payloads;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+//    public String getId() {
+//        return id;
+//    }
+//
+//    public void setId(String id) {
+//        this.id = id;
+//    }
 
     public String getEmailFrom() {
         return emailFrom;
@@ -54,6 +55,14 @@ public class PayslipResponse {
 
     public List<Payload> getPayloads() {
         return payloads;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public void setPayloads(List<Payload> payloads) {

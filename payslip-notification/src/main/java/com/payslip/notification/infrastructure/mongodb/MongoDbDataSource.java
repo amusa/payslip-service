@@ -40,7 +40,7 @@ public class MongoDbDataSource {
     }
 
     @Produces
-    @RequestScoped
+    //@RequestScoped
     public MongoDatabase exposeMongoDbSource() throws IOException {
         return mongoDb;
     }

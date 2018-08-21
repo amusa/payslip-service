@@ -53,6 +53,7 @@ import microsoft.exchange.webservices.data.notification.SubscriptionErrorEventAr
 import microsoft.exchange.webservices.data.property.complex.FolderId;
 import microsoft.exchange.webservices.data.property.complex.ItemId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
 /**
  *
@@ -222,20 +223,25 @@ public class ExchangeConnector implements StreamingSubscriber {
         fireEvent(errorOccurred);
     }
 
-    @Override
+    @Override    
     public void subscriptionErrorDelegate(Object sender, SubscriptionErrorEventArgs ser) {
         logger.log(Level.INFO, "--- Subscription error ---" + ser.getException());
         // Cast the sender as a StreamingSubscriptionConnection object.          
         StreamingSubscriptionConnection connection = (StreamingSubscriptionConnection) sender;
+        reconnect(connection);
 
+    }
+
+    @Retry(maxRetries = 5, maxDuration= 2000, retryOn = {Exception.class})
+    public void reconnect(StreamingSubscriptionConnection connection) {
         try {
             logger.log(Level.INFO, "--- Reconnecting ---");
             connection.open();
             logger.log(Level.INFO, "--- Subscription connection opened ---");
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "--- Error: connection failure: {0} ---", ex.getMessage());
+            throw new RuntimeException(ex);
         }
-
     }
 
     private void fireEvent(AppEvent event) {

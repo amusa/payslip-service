@@ -26,6 +26,8 @@ import microsoft.exchange.webservices.data.credential.WebCredentials;
 import microsoft.exchange.webservices.data.property.complex.EmailAddress;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
 /**
  *
@@ -66,45 +68,96 @@ public class EmailMessenger implements Messenger {
 
         if (payslipResponse != null) {
             logger.log(Level.INFO, "--- payslip response retried from db ---");
-            try {
-                EmailMessage msg = new EmailMessage(service);
-                msg.setSubject(String.format("RE:%s", event.getSubject()));
-                msg.setBody(MessageBody.getMessageBodyFromText("Please find attached your payslip(s) as requested"));
-                EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
-                msg.getToRecipients().add(event.getEmailFrom());
-                msg.setFrom(fromEmail);
 
-                logger.log(Level.INFO, "--- Attaching payslip ---");
-
-                for (Payload pl : payslipResponse.getPayloads()) {
-                    msg.getAttachments().addFileAttachment(pl.getPdfFileName(), pl.getPayslipPdf());
-                }
-
-                logger.log(Level.INFO, "--- Sending email ---");
-                msg.send();
-            } catch (Exception ex1) {
-                logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
-            }
+            mailPayslip(payslipResponse, false);
         }
 
     }
 
     @Override
-    public void when(Notification event) {
-        logger.log(Level.INFO, "--- Notification Event received for processing ---");
+    @Retry(maxRetries = 3)
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio=0.75, delay = 1000)
+    public void mailPayslip(PayslipResponse payslip, boolean retry) {
         try {
             EmailMessage msg = new EmailMessage(service);
-            msg.setSubject(String.format("RE:%s", event.getSubject()));
-            msg.setBody(MessageBody.getMessageBodyFromText(event.getMessage()));
+            msg.setSubject(String.format("RE:%s", payslip.getSubject()));
+            msg.setBody(MessageBody.getMessageBodyFromText("Please find attached your payslip(s) as requested"));
             EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
-            msg.getToRecipients().add(event.getEmailFrom());
+            msg.getToRecipients().add(payslip.getEmailFrom());
+            msg.setFrom(fromEmail);
+
+            logger.log(Level.INFO, "--- Attaching payslip ---");
+
+            for (Payload pl : payslip.getPayloads()) {
+                msg.getAttachments().addFileAttachment(pl.getPdfFileName(), pl.getPayslipPdf());
+            }
+
+            logger.log(Level.INFO, "--- Sending email ---");
+
+            msg.send();
+        } catch (Exception ex1) {
+            logger.log(Level.SEVERE, "--- error sending email ---\n{0}", ex1);
+            if (!retry) {
+                markForRetry(payslip.getRequestId());
+            }
+            return;
+        }
+
+        deletePayslip(payslip.getRequestId());
+    }
+
+    @Override
+    public void when(Notification event) {
+        logger.log(Level.INFO, "--- Notification Event received for processing ---");
+
+        mailNotice(event, false);
+    }
+
+    @Override
+    @Retry(maxRetries = 3)
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio=0.75, delay = 1000)
+    public void mailNotice(Notification notice, boolean retry) {
+        try {
+            EmailMessage msg = new EmailMessage(service);
+            msg.setSubject(String.format("RE:%s", notice.getSubject()));
+            msg.setBody(MessageBody.getMessageBodyFromText(notice.getMessage()));
+            EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
+            msg.getToRecipients().add(notice.getEmailFrom());
             msg.setFrom(fromEmail);
 
             logger.log(Level.INFO, "--- Sending email ---");
             msg.send();
         } catch (Exception ex1) {
             logger.log(Level.SEVERE, "--- error sending emial ---\n", ex1);
+            saveNoticeForRetry(notice);
+            return;
         }
+
+        if (retry) {
+            deleteNotice(notice.getId());
+        }
+    }
+
+    private void deletePayslip(String id) {
+        dbClient.deletePayslip(id);
+    }
+
+    private void deleteNotice(String id) {
+        dbClient.deleteNotice(id);
+    }
+
+    @Retry(maxRetries = 3)
+    public void markForRetry(String id) {
+        logger.log(Level.INFO, "--- saving notice to db for deferred retry ---\n");
+        dbClient.markAsFailed(id);
+        logger.log(Level.INFO, "--- notice saved successfully ---\n");
+    }
+
+    @Retry(maxRetries = 3)
+    public void saveNoticeForRetry(Notification notice) {
+        logger.log(Level.INFO, "--- Marking payload for deferred retry ---\n");
+        dbClient.putNoticeForRetry(notice);
+        logger.log(Level.INFO, "--- payload marked as failed successfully ---\n");
     }
 
     @PostConstruct
