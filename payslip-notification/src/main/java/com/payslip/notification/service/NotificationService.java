@@ -84,13 +84,17 @@ public class NotificationService {
             events.fire(ev);
         }, payslips, notices);
 
-        ResponseWorker noticeWorker = new ResponseWorker(dbClient, messenger);
-
-        logger.log(Level.INFO, "--- Submitting eventconsumer task {0} ---", mes.toString());
         mes.submit(eventConsumer);
-       
+        logger.log(Level.INFO, "--- EventConsumer scheduled ---");
+
+        PayslipResponseWorker payslipWorker = new PayslipResponseWorker(dbClient, messenger);
+        mses.scheduleAtFixedRate(payslipWorker, initialDelay, period, TimeUnit.MINUTES);
+        logger.log(Level.INFO, "--- PayslipResponseWorker scheduled ---");
+
+        NoticeResponseWorker noticeWorker = new NoticeResponseWorker(dbClient, messenger);
         mses.scheduleAtFixedRate(noticeWorker, initialDelay, period, TimeUnit.MINUTES);
-        logger.log(Level.INFO, "--- Event consumer scheduled with topic {0}", payslips);
+        logger.log(Level.INFO, "--- NoticeResponseWorker scheduled ---");
+
     }
 
     @PreDestroy

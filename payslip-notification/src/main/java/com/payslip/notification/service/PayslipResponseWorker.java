@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ResponseWorker implements Runnable {
+public class PayslipResponseWorker implements Runnable {
 
-    private static final Logger logger = Logger.getLogger(ResponseWorker.class.getName());
+    private static final Logger logger = Logger.getLogger(PayslipResponseWorker.class.getName());
     private MongoDbPayslipClient dbClient;
     private Messenger messenger;
 
-    public ResponseWorker(MongoDbPayslipClient dbClient, Messenger messenger) {
+    public PayslipResponseWorker(MongoDbPayslipClient dbClient, Messenger messenger) {
         this.dbClient = dbClient;
         this.messenger = messenger;
     }
