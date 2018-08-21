@@ -29,6 +29,8 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
 /**
  *
@@ -104,6 +106,8 @@ public class JCoPayslipService implements PayslipService {
     }
 
     @Override
+    @CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4, failureRatio = 0.75, delay = 50000)
+    @Retry(retryOn = {RuntimeException.class, JCoException.class}, maxRetries = 7, maxDuration = 20000)
     public List<PayData> getPayslipBytes(String staffId, Date dateFrom, Date dateTo) throws JCoException {
         logger.log(Level.INFO, "--- getPayslipBytes called with parameters: StaffId={0}, dateFrom={1}, dateTo={2} ---",
                 new Object[]{staffId, dateFrom, dateTo});
