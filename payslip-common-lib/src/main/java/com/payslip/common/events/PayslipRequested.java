@@ -23,30 +23,29 @@ public class PayslipRequested extends AppEvent {
 
     private String emailFrom;
     private Date dateSent;
-    private String staffId;
+    //private String staffId;
     private PayPeriod periodFrom;
     private PayPeriod periodTo;
 
     public PayslipRequested() {
     }
         
-    public PayslipRequested(String emailFrom, String dateSent, String staffId, String subject, PayPeriod periodFrom, PayPeriod periodTo) {
+    public PayslipRequested(String emailFrom, String dateSent, String subject, PayPeriod periodFrom, PayPeriod periodTo) {
         super(subject);
 
-        logger.log(Level.INFO, "emailFrom={0}, dateSent={1}, staffId={2}, subject={3} periodFrom={4}, periodTo={5}",
-                new Object[]{emailFrom, dateSent, staffId, subject, periodFrom, periodTo});
+        logger.log(Level.INFO, "emailFrom={0}, dateSent={1}, subject={2} periodFrom={3}, periodTo={4}",
+                new Object[]{emailFrom, dateSent, subject, periodFrom, periodTo});
 
         this.emailFrom = emailFrom;
         this.dateSent = toDate(dateSent, "yyyy-MM-dd");
-        this.staffId = staffId;
+       // this.staffId = staffId;
         this.periodFrom = periodFrom;
         this.periodTo = periodTo;
     }
 
     public PayslipRequested(JsonObject jsonObject) {
         this(jsonObject.getString("emailFrom"),
-                jsonObject.getString("dateSent"),
-                jsonObject.getString("staffId"),
+                jsonObject.getString("dateSent"),                
                 jsonObject.getString("subject"),
                 new PayPeriod(jsonObject.getJsonObject("periodFrom")),
                 new PayPeriod(jsonObject.getJsonObject("periodTo"))
@@ -69,13 +68,13 @@ public class PayslipRequested extends AppEvent {
         this.dateSent = dateSent;
     }
 
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
-    }
+//    public String getStaffId() {
+//        return staffId;
+//    }
+//
+//    public void setStaffId(String staffId) {
+//        this.staffId = staffId;
+//    }
 
     public PayPeriod getPeriodFrom() {
         return periodFrom;

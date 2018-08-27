@@ -49,7 +49,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
         try {
             logger.log(Level.INFO, "--- Invoking PayslipService.getPayslipBytes() ---");
             List<PayData> payDataList = payslipService
-                    .getPayslipBytes(request.getStaffId(),
+                    .getPayslipBytes(request.getEmailFrom(),
                             request.getPeriodFrom().getDate(),
                             request.getPeriodTo().getDate(MonthMarker.END));
 
@@ -82,7 +82,7 @@ public class DefaultFulfilmentService implements FulfilmentService {
         PayslipGenerated event = new PayslipGenerated(
                 request.getEmailFrom(),
                 request.getDateSent(),
-                request.getStaffId(),
+//                request.getStaffId(),
                 request.getId(),
                 request.getSubject(),
                 refId

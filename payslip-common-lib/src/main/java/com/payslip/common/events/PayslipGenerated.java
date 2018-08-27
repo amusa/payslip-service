@@ -21,7 +21,7 @@ public class PayslipGenerated extends AppEvent {
 
     private String emailFrom;
     private Date dateSent;
-    private String staffId;
+    //private String staffId;
     private String requestId;
     private String referenceId;
     //private List<Payload> payloads;
@@ -29,14 +29,14 @@ public class PayslipGenerated extends AppEvent {
     public PayslipGenerated() {
     }
 
-    public PayslipGenerated(String emailFrom, Date dateSent, String staffId, String requestId, String subject,
+    public PayslipGenerated(String emailFrom, Date dateSent, String requestId, String subject,
     //, List<Payload> payloads
             String refId
     ) {
         super(subject);
         this.emailFrom = emailFrom;
         this.dateSent = dateSent;
-        this.staffId = staffId;
+        //this.staffId = staffId;
         this.requestId = requestId;
         // this.payloads = payloads;
         this.referenceId = refId;
@@ -58,13 +58,13 @@ public class PayslipGenerated extends AppEvent {
         this.dateSent = dateSent;
     }
 
-    public String getStaffId() {
-        return staffId;
-    }
-
-    public void setStaffId(String staffId) {
-        this.staffId = staffId;
-    }
+//    public String getStaffId() {
+//        return staffId;
+//    }
+//
+//    public void setStaffId(String staffId) {
+//        this.staffId = staffId;
+//    }
 
     public String getRequestId() {
         return requestId;

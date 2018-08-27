@@ -8,6 +8,7 @@ package com.payslip.api.util;
 import com.payslip.common.events.PayPeriod;
 import com.payslip.common.events.PayslipRequested;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,54 +22,46 @@ public class RequestParser {
     private static final Logger logger = Logger.getLogger(RequestParser.class.getName());
 
     public static PayslipRequested parse(String emailSubject, Date dateSent, String emailFrom) throws ParseException {
-        String[] tokens = emailSubject.split("\\s");
-        String staffId = null;
+        String[] tokens = emailSubject.split("\\s+");
+        //String staffId = null;
         String dateFrom = null;
         String dateTo = null;
 
+        PayslipRequested request = new PayslipRequested();
+        request.setSubject(emailSubject);
+
         logger.log(Level.INFO, "--- parsing ---");
 
-        if (tokens.length < 3) {
-            throw new RuntimeException("Wrong request format");
-        }
-
-        logger.log(Level.INFO, "--- minimum tokens met ---");
-
         if (tokens[0].toUpperCase().matches("#PAYSLIP")) {
-            staffId = tokens[1];
-
-            logger.log(Level.INFO, "--- extracted staff id: {0} ---", staffId);
-
-            if (tokens[2].matches("\\d{1,2}[/|-]\\d{2,4}")) {
-                dateFrom = tokens[2];
+            if (tokens.length > 1 && tokens[1].matches("\\d{1,2}[/|-]\\d{2,4}")) {
+                dateFrom = tokens[1];
                 logger.log(Level.INFO, "--- 1st date extracted: {0} ---", dateFrom);
-            }
 
-            if (tokens.length > 3 && tokens[3].matches("\\d{1,2}[/|-]\\d{2,4}")) {
-                dateTo = tokens[3];
-                logger.log(Level.INFO, "--- 2nd date extracted: {0} ---", dateTo);
-            }
+                String periodFrom[] = dateFrom.split("[/|-]");
 
-            PayslipRequested request = new PayslipRequested();
-            request.setSubject(emailSubject);
-            request.setStaffId(staffId);
+                PayPeriod fP = getPayPeriod(periodFrom[1], periodFrom[0]);
+                request.setPeriodFrom(fP);
 
-            if (null == dateFrom) {
-                throw new RuntimeException("No pay period specified");
-            }
+                if (tokens.length > 2 && tokens[2].matches("\\d{1,2}[/|-]\\d{2,4}")) {
+                    dateTo = tokens[2];
+                    logger.log(Level.INFO, "--- 2nd date extracted: {0} ---", dateTo);
+                }
 
-            String periodFrom[] = dateFrom.split("[/|-]");
+                if (null == dateTo) {
+                    logger.log(Level.INFO, "--- setting payDateTo to payDateFrom: {0} ---", fP);
+                    request.setPeriodTo(fP);
+                } else {
+                    String periodTo[] = dateTo.split("[/|-]");
+                    request.setPeriodTo(getPayPeriod(periodTo[1], periodTo[0]));
+                }
 
-            PayPeriod fP = getPayPeriod(periodFrom[1], periodFrom[0]);
-            request.setPeriodFrom(fP);
-
-            if (null == dateTo) {
-                logger.log(Level.INFO, "--- setting payDateTo to payDateFrom: {0} ---", fP);
-                request.setPeriodTo(fP);
             } else {
-                String periodTo[] = dateTo.split("[/|-]");
-                request.setPeriodTo(getPayPeriod(periodTo[1], periodTo[0]));
+                LocalDate ld = LocalDate.now();
+                PayPeriod currentPeriod = new PayPeriod(ld.getYear(), ld.getMonthValue());
+                request.setPeriodFrom(currentPeriod);
+                request.setPeriodTo(currentPeriod);
             }
+
             logger.log(Level.INFO, "--- setting dateSent: {0} ---", dateSent);
             request.setDateSent(dateSent);
             logger.log(Level.INFO, "--- setting emailFrom: {0} ---", emailFrom);

@@ -21,5 +21,5 @@ public interface Messenger {
 
     void mailPayslip(PayslipResponse payslip, boolean retry);
 
-    void mailNotice(Notification notice, boolean retry);
+    void mailNotice(Notification notice, boolean retry) throws Exception;
 }

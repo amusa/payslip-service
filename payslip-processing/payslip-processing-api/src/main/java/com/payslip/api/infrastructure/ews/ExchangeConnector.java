@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
+import javax.ejb.EJBException;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.event.Event;
@@ -89,57 +90,19 @@ public class ExchangeConnector implements StreamingSubscriber {
     @Inject
     Event<AppEvent> events;
 
-//    @Inject
-//    EventProducer producer;
-//    @Inject
-//    EventPublisher<PayslipRequested> producer;
-//    @Inject
-//    EventPublisher<Notification> errorProducer;
     @PostConstruct
     private void init() {
-        logger.log(Level.INFO, "--- initializing Exchange Connector ---");
         try {
-            ewsUrl = String.format("https://%s/EWS/Exchange.asmx", ewsHost);
-
-            service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-            ExchangeCredentials credentials = new WebCredentials(ewsUser, ewsPwd, ewsDomain);
-            service.setCredentials(credentials);
-            service.setUrl(new URI(ewsUrl));
-
-            WellKnownFolderName sd = WellKnownFolderName.Inbox;
-            FolderId folderId = new FolderId(sd);
-
-            ArrayList<FolderId> folder = new ArrayList<FolderId>();
-            folder.add(folderId);
-
-            logger.log(Level.INFO, "--- Creating subscribtion ---");
-            subscription = service.subscribeToStreamingNotifications(folder, EventType.NewMail);
-            logger.log(Level.INFO, "--- Creating streaming subscription connection ---");
-            conn = new StreamingSubscriptionConnection(service, 10);
-            logger.log(Level.INFO, "--- Subscribing to new mail events ---");
-            conn.addSubscription(subscription);
-
-            //StreamingSubscriber subscriber = new ExchangeStreamingSubscriber(producer);
-            conn.addOnNotificationEvent(this);
-            conn.addOnSubscriptionError(this);
-            conn.addOnDisconnect(this);
-
-            // Delegate event handlers. 
-            logger.log(Level.INFO, "--- Opening connection ---");
-            conn.open();
-            logger.log(Level.INFO, "--- Connection opened. ---");
-
-            logger.log(Level.INFO, "--- Payslip request streamingsubscribtion subscribed ---");
-
-        } catch (Exception e) {
-            throw new RuntimeException("--- Cannot connect ---", e);
+            connect();
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
-
     }
 
     @Override
     public void notificationEventDelegate(Object sender, NotificationEventArgs nev) {
-        System.out.println("--- notification event ---");
+        System.out.println("--- payslip request event triggered ---");
 
         // First retrieve the IDs of all the new emails
         List<ItemId> newMailsIds = new ArrayList<ItemId>();
@@ -153,8 +116,6 @@ public class ExchangeConnector implements StreamingSubscriber {
         }
 
         if (newMailsIds.size() > 0) {
-            // Now retrieve the Subject property of all the new emails in one
-            // call to EWS.
             ServiceResponseCollection<GetItemResponse> responses;
             ValidatorProcessor validator = new ValidatorProcessor();
             try {
@@ -174,7 +135,6 @@ public class ExchangeConnector implements StreamingSubscriber {
 
                         try {
                             emailRequest = RequestParser.parse(subject, message.getDateTimeSent(), message.getSender().getAddress());
-//                         PayslipRequested emailRequest2 = RequestParser.parse2(subject, message.getDateTimeSent(), message.getSender().getAddress());
 
                             logger.log(Level.INFO, "--- validating request ---");
                             validator.add(new PayPeriodValidator(emailRequest.getPeriodFrom()));
@@ -186,14 +146,12 @@ public class ExchangeConnector implements StreamingSubscriber {
                             logger.log(Level.INFO, "--- validation successful ---");
                             logger.log(Level.INFO, "--- Publishing payslip requests to topic '{0}'");
 
-                            //producer.publish(emailRequest, false);
                             fireEvent(emailRequest);
 
                             logger.log(Level.INFO, "--- request published successfully ---");
                             response.getItem().delete(DeleteMode.MoveToDeletedItems);
                             logger.log(Level.INFO, "--- mail deleted successfully ---");
                         } catch (Exception ex) {
-                            //TODO:publish notification to error topic
                             logger.log(Level.WARNING, ex.getMessage());
                             publishError(subject, message.getDateTimeSent(), message.getSender().getAddress(), UUID.randomUUID().toString(), ex.getMessage());
                         }
@@ -204,7 +162,6 @@ public class ExchangeConnector implements StreamingSubscriber {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                //TODO: publish error message
             }
         }
 
@@ -223,7 +180,7 @@ public class ExchangeConnector implements StreamingSubscriber {
         fireEvent(errorOccurred);
     }
 
-    @Override    
+    @Override
     public void subscriptionErrorDelegate(Object sender, SubscriptionErrorEventArgs ser) {
         logger.log(Level.INFO, "--- Subscription error ---" + ser.getException());
         // Cast the sender as a StreamingSubscriptionConnection object.          
@@ -232,7 +189,8 @@ public class ExchangeConnector implements StreamingSubscriber {
 
     }
 
-    @Retry(maxRetries = 5, maxDuration= 2000, retryOn = {Exception.class})
+    @Override
+    @Retry(maxRetries = 5, maxDuration = 100000, retryOn = {RuntimeException.class, EJBException.class, Exception.class})
     public void reconnect(StreamingSubscriptionConnection connection) {
         try {
             logger.log(Level.INFO, "--- Reconnecting ---");
@@ -246,6 +204,43 @@ public class ExchangeConnector implements StreamingSubscriber {
 
     private void fireEvent(AppEvent event) {
         events.fire(event);
+    }
+
+    @Override
+    @Retry(maxRetries = 5, maxDuration = 1000000, retryOn = {RuntimeException.class, EJBException.class, Exception.class})
+    public void connect() throws Exception {
+        logger.log(Level.INFO, "--- initializing Exchange Connector ---");
+
+        ewsUrl = String.format("https://%s/EWS/Exchange.asmx", ewsHost);
+
+        service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+        ExchangeCredentials credentials = new WebCredentials(ewsUser, ewsPwd, ewsDomain);
+        service.setCredentials(credentials);
+        service.setUrl(new URI(ewsUrl));
+
+        WellKnownFolderName sd = WellKnownFolderName.Inbox;
+        FolderId folderId = new FolderId(sd);
+
+        ArrayList<FolderId> folder = new ArrayList<FolderId>();
+        folder.add(folderId);
+
+        logger.log(Level.INFO, "--- Creating subscribtion ---");
+        subscription = service.subscribeToStreamingNotifications(folder, EventType.NewMail);
+        logger.log(Level.INFO, "--- Creating streaming subscription connection ---");
+        conn = new StreamingSubscriptionConnection(service, 30);
+        logger.log(Level.INFO, "--- Subscribing to new mail events ---");
+        conn.addSubscription(subscription);
+
+        conn.addOnNotificationEvent(this);
+        conn.addOnSubscriptionError(this);
+        conn.addOnDisconnect(this);
+
+        logger.log(Level.INFO, "--- Opening connection ---");
+        conn.open();
+        logger.log(Level.INFO, "--- Connection opened. ---");
+
+        logger.log(Level.INFO, "--- Payslip request streamingsubscribtion subscribed ---");
+
     }
 
 }

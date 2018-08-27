@@ -42,7 +42,7 @@ public class EventConsumer implements Runnable {
         } catch (Exception ex) {
             logger.log(Level.INFO, "--- Catch-all exception: {0}", ex);
         } finally {
-            logger.log(Level.INFO, "--- Closing consumer closed.get()={0}", closed.get());
+            logger.log(Level.INFO, "--- Closing consumer closed.get()={0} ---", closed.get());
             consumer.close();
         }
     }
@@ -61,7 +61,7 @@ public class EventConsumer implements Runnable {
     }
 
     public void stop() {
-        logger.info("--- Stopping EventConsumer");
+        logger.info("--- Stopping EventConsumer ---");
         closed.set(true);
         consumer.wakeup();
     }

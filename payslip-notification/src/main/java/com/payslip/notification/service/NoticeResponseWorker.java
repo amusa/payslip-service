@@ -24,7 +24,11 @@ public class NoticeResponseWorker implements Runnable {
         logger.log(Level.INFO, "--- notices fetched. size={0} ---", (notices != null ? notices.size() : 0));
         for (Notification nt : notices) {
             logger.log(Level.INFO, "--- emailing id:{0} ---", nt.getRequestId());
-            messenger.mailNotice(nt, true);
+            try {
+                messenger.mailNotice(nt, true);
+            } catch (Exception ex) {
+                Logger.getLogger(NoticeResponseWorker.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
