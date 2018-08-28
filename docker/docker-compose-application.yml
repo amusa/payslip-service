@@ -1,7 +1,7 @@
 version: '2'
 services:
   processor:
-    image: maliska/payslip-processing:latest 
+    image: nnpc/payslip-processing:1.0.0
     container_name: request_processor
     #restart: always    
     #ports:
@@ -16,7 +16,7 @@ services:
       - paynet      
     
   fulfilment:
-    image: maliska/payslip-fulfilment:latest 
+    image: nnpc/payslip-fulfilment:1.0.0
     #container_name: request_fulfilment
     #restart: always
     #ports:
@@ -32,7 +32,7 @@ services:
       - paynet
       
   notification:
-    image: maliska/payslip-notification:latest 
+    image: nnpc/payslip-notification:1.0.0 
     #container_name: request_fulfilment
     #restart: always
     #ports:
