@@ -89,7 +89,7 @@ public class JCoPayslipService implements PayslipService {
         connectProperties.setProperty(DestinationDataProvider.JCO_POOL_CAPACITY, jcoPoolCapacity);
         connectProperties.setProperty(DestinationDataProvider.JCO_PEAK_LIMIT, jcoPeakLimit);
         createDestinationDataFile(sapRfcDestination, connectProperties);
-        logger.log(Level.INFO, "--- Jco service initialized ---\n{0}", connectProperties);
+       // logger.log(Level.INFO, "--- Jco service initialized ---\n{0}", connectProperties);
     }
 
     private void createDestinationDataFile(String destinationName, Properties connectProperties) {
@@ -141,22 +141,27 @@ public class JCoPayslipService implements PayslipService {
             throw new RuntimeException("ZBAPI_GET_PAYSLIP_PDF not found in SAP.");
         }
 
-        bapiGetIByEmailFunction.getImportParameterList().setValue("EMAIL", email);
         logger.log(Level.INFO, "--- Begining session ---");
 
         JCoContext.begin(destination);
         try {
+            bapiGetIByEmailFunction.getImportParameterList().setValue("EMAIL", email.toUpperCase());
             logger.log(Level.INFO, "--- Executing 'ZUSER_GET_BY_EMAIL' ---");
             bapiGetIByEmailFunction.execute(destination);
             logger.log(Level.INFO, "--- Executed 'ZUSER_GET_BY_EMAIL' successfully ---");
 
             JCoStructure userIdReturnStructure = bapiGetIByEmailFunction.getExportParameterList().getStructure("RESULT");
-            String staffId = userIdReturnStructure.getString("USRID_LONG");
+                     String staffId = userIdReturnStructure.getString("PERNR");
+            String retEmail = userIdReturnStructure.getString("USRID_LONG");
+            logger.log(Level.INFO, "--- StaffId and Email returned from 'ZUSER_GET_BY_EMAIL':{0}, {1} ---", new Object[]{staffId, retEmail});
 
-            if (null == staffId) {
+            staffId = staffId.replaceFirst("^0+", "");
+           
+
+            if (null == staffId || staffId.isEmpty()) {
                 throw new RuntimeException("User ID could not be derived using email provided");
             }
-
+            
             bapiPayListFunction.getImportParameterList().setValue("EMPLOYEENUMBER", staffId);
             bapiPayListFunction.getImportParameterList().setValue("FROMDATE", sdf.format(dateFrom));
             bapiPayListFunction.getImportParameterList().setValue("TODATE", sdf.format(dateTo));

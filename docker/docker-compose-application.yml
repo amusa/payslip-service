@@ -22,8 +22,8 @@ services:
       - mongodb.url=mongodb://mongo_db   
       - JCO_ASHOST=10.0.64.111
       - JCO_CLIENT=500
-      - JCO_USER=18359
-      - JCO_PASSWD=M@dan1sc0      
+      - JCO_USER=PAYSLP_AGENT
+      - JCO_PASSWD=Password@1      
     networks:
       - paynet
       
