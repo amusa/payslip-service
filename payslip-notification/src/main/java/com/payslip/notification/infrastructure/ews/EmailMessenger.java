@@ -57,6 +57,10 @@ public class EmailMessenger implements Messenger {
     @Inject
     @ConfigProperty(name = "EWS_DOMAIN")
     private String ewsDomain;
+    
+    @Inject
+    @ConfigProperty(name = "AGENT_EMAIL")
+    private String agentEmail;
 
     private String ewsUrl;
 
@@ -82,7 +86,7 @@ public class EmailMessenger implements Messenger {
             EmailMessage msg = new EmailMessage(service);
             msg.setSubject(String.format("RE:%s", payslip.getSubject()));
             msg.setBody(MessageBody.getMessageBodyFromText("Please find attached your payslip(s) as requested"));
-            EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
+            EmailAddress fromEmail = new EmailAddress(agentEmail);
             msg.getToRecipients().add(payslip.getEmailFrom());
             msg.setFrom(fromEmail);
 
@@ -127,7 +131,7 @@ public class EmailMessenger implements Messenger {
         EmailMessage msg = new EmailMessage(service);
         msg.setSubject(String.format("RE:%s", notice.getSubject()));
         msg.setBody(MessageBody.getMessageBodyFromText(notice.getMessage()));
-        EmailAddress fromEmail = new EmailAddress("ayemi.musa@nnpcgroup.com");
+        EmailAddress fromEmail = new EmailAddress(agentEmail);
         msg.getToRecipients().add(notice.getEmailFrom());
         msg.setFrom(fromEmail);
 

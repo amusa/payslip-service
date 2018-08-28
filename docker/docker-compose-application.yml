@@ -8,6 +8,10 @@ services:
     #  - "8082:8082"
     environment:
       - BOOTSTRAP_SERVERS=kafka:29092
+    #  - EWS_HOST=mail.nnpcgroup.com
+      - EWS_USER=18359
+      - EWS_PASSWORD=M@dan1sco
+    #  - EWS_DOMAIN=chq
     networks:
       - paynet      
     
@@ -35,7 +39,12 @@ services:
     #  - "8081:8081"
     environment:           
       - BOOTSTRAP_SERVERS=kafka:29092     
-      - mongodb.url=mongodb://mongo_db      
+      - mongodb.url=mongodb://mongo_db   
+      #- EWS_HOST=mail.nnpcgroup.com
+      - EWS_USER=18359
+      - EWS_PASSWORD=M@dan1sco
+    #  - EWS_DOMAIN=chq
+      - AGENT_EMAIL=ayemi.musa@nnpcgroup.com      
     networks:
       - paynet
       
