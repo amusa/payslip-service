@@ -3,14 +3,14 @@ services:
   processor:
     image: nnpc/payslip-processing:1.0.0
     container_name: request_processor
-    #restart: always    
+    restart: always    
     #ports:
     #  - "8082:8082"
     environment:
       - BOOTSTRAP_SERVERS=kafka:29092
     #  - EWS_HOST=mail.nnpcgroup.com
-      - EWS_USER=18359
-      - EWS_PASSWORD=M@dan1sco
+      - EWS_USER=COE_MAIL_AGENT
+      - EWS_PASSWORD=c03m@1ljk
     #  - EWS_DOMAIN=chq
     networks:
       - paynet      
@@ -18,7 +18,7 @@ services:
   fulfilment:
     image: nnpc/payslip-fulfilment:1.0.0
     #container_name: request_fulfilment
-    #restart: always
+    restart: always
     #ports:
     #  - "8081:8081"
     environment:           
@@ -34,17 +34,17 @@ services:
   notification:
     image: nnpc/payslip-notification:1.0.0 
     #container_name: request_fulfilment
-    #restart: always
+    restart: always
     #ports:
     #  - "8081:8081"
     environment:           
       - BOOTSTRAP_SERVERS=kafka:29092     
       - mongodb.url=mongodb://mongo_db   
       #- EWS_HOST=mail.nnpcgroup.com
-      - EWS_USER=18359
-      - EWS_PASSWORD=M@dan1sco
+      - EWS_USER=COE_MAIL_AGENT
+      - EWS_PASSWORD=c03m@1ljk
     #  - EWS_DOMAIN=chq
-      - AGENT_EMAIL=ayemi.musa@nnpcgroup.com      
+      - AGENT_EMAIL=COE_MAIL_AGENT@nnpcgroup.com    
     networks:
       - paynet
       
