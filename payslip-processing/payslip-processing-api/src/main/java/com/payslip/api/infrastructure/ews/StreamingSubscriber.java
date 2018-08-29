@@ -13,5 +13,5 @@ import microsoft.exchange.webservices.data.notification.StreamingSubscriptionCon
  */
 public interface StreamingSubscriber extends StreamingSubscriptionConnection.INotificationEventDelegate, StreamingSubscriptionConnection.ISubscriptionErrorDelegate{
     void connect() throws Exception;
-    void reconnect(StreamingSubscriptionConnection connection);
+    void reconnect(StreamingSubscriptionConnection connection) throws Exception;
 }

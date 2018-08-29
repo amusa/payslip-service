@@ -182,24 +182,29 @@ public class ExchangeConnector implements StreamingSubscriber {
 
     @Override
     public void subscriptionErrorDelegate(Object sender, SubscriptionErrorEventArgs ser) {
-        logger.log(Level.INFO, "--- Subscription error ---" + ser.getException());
+        logger.log(Level.INFO, "--- Subscription error ---\n{0}", ser.getException());
         // Cast the sender as a StreamingSubscriptionConnection object.          
         StreamingSubscriptionConnection connection = (StreamingSubscriptionConnection) sender;
-        reconnect(connection);
+        try {
+            reconnect(connection);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "--- Error: connection failure: {0} ---", ex.getMessage());
+            System.exit(1);
+        }
 
     }
 
     @Override
     @Retry(maxRetries = 5, maxDuration = 100000, retryOn = {RuntimeException.class, EJBException.class, Exception.class})
-    public void reconnect(StreamingSubscriptionConnection connection) {
-        try {
+    public void reconnect(StreamingSubscriptionConnection connection) throws Exception {
+        //try {
             logger.log(Level.INFO, "--- Reconnecting ---");
             connection.open();
             logger.log(Level.INFO, "--- Subscription connection opened ---");
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "--- Error: connection failure: {0} ---", ex.getMessage());
-            throw new RuntimeException(ex);
-        }
+        //} catch (Exception ex) {
+        //    logger.log(Level.SEVERE, "--- Error: connection failure: {0} ---", ex.getMessage());
+        //    throw new RuntimeException(ex);
+        //}
     }
 
     private void fireEvent(AppEvent event) {
