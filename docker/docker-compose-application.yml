@@ -8,7 +8,7 @@ services:
     #  - "8082:8082"
     environment:
       - BOOTSTRAP_SERVERS=kafka:29092
-    #  - EWS_HOST=mail.nnpcgroup.com
+      - EWS_HOST=outlook.nnpcgroup.com
       - EWS_USER=COE_MAIL_AGENT
       - EWS_PASSWORD=c03m@1ljk
     #  - EWS_DOMAIN=chq
@@ -40,7 +40,7 @@ services:
     environment:           
       - BOOTSTRAP_SERVERS=kafka:29092     
       - mongodb.url=mongodb://mongo_db   
-      #- EWS_HOST=mail.nnpcgroup.com
+      - EWS_HOST=outlook.nnpcgroup.com
       - EWS_USER=COE_MAIL_AGENT
       - EWS_PASSWORD=c03m@1ljk
     #  - EWS_DOMAIN=chq
