@@ -72,10 +72,18 @@
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>            
         </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.logentries</groupId>
+            <artifactId>logentries-appender</artifactId> 
+        </dependency>
     </dependencies>
 
     <build>
-          <finalName>${project.artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>           
             <plugin>
                 <groupId>io.thorntail</groupId>
@@ -138,7 +146,7 @@
                                                          
 
                             </build>
-<!--                            <run>
+                            <!--                            <run>
                                 <ports>
                                     Map container port 8080 to a dynamical port 
                                     <port>8082:8082</port>

@@ -84,6 +84,10 @@ public class ExchangeConnector implements StreamingSubscriber {
     @Inject
     @ConfigProperty(name = "EWS_HOST")
     private String ewsHost;
+    
+    @Inject
+    @ConfigProperty(name = "PAY_DAY_CHECK")
+    private Boolean payDayCheck;
 
     private String ewsUrl;
 
@@ -102,7 +106,7 @@ public class ExchangeConnector implements StreamingSubscriber {
 
     @Override
     public void notificationEventDelegate(Object sender, NotificationEventArgs nev) {
-        System.out.println("--- payslip request event triggered ---");
+        logger.log(Level.INFO, "--- payslip request event triggered ---");
 
         // First retrieve the IDs of all the new emails
         List<ItemId> newMailsIds = new ArrayList<ItemId>();
@@ -140,7 +144,8 @@ public class ExchangeConnector implements StreamingSubscriber {
                             validator.add(new PayPeriodValidator(emailRequest.getPeriodFrom()));
                             validator.add(new PayPeriodValidator(emailRequest.getPeriodTo()));
                             validator.add(new PayPeriodRangeValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
-                            validator.add(new PayPeriodViewValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo()));
+                            validator.add(new PayPeriodViewValidator(emailRequest.getPeriodFrom(), emailRequest.getPeriodTo(), payDayCheck));
+                            logger.log(Level.INFO, "--- pay period view check set to {0} ---", payDayCheck);
 
                             validator.process();
                             logger.log(Level.INFO, "--- validation successful ---");
@@ -198,9 +203,9 @@ public class ExchangeConnector implements StreamingSubscriber {
     @Retry(maxRetries = 5, maxDuration = 100000, retryOn = {RuntimeException.class, EJBException.class, Exception.class})
     public void reconnect(StreamingSubscriptionConnection connection) throws Exception {
         //try {
-            logger.log(Level.INFO, "--- Reconnecting ---");
-            connection.open();
-            logger.log(Level.INFO, "--- Subscription connection opened ---");
+        logger.log(Level.INFO, "--- Reconnecting ---");
+        connection.open();
+        logger.log(Level.INFO, "--- Subscription connection opened ---");
         //} catch (Exception ex) {
         //    logger.log(Level.SEVERE, "--- Error: connection failure: {0} ---", ex.getMessage());
         //    throw new RuntimeException(ex);

@@ -32,10 +32,9 @@ public class MongoDbPayslipClient {
         String payslipJson = gson.toJson(payslip);
         
         Document payslipDoc = Document.parse(payslipJson);
-        
-        logger.log(Level.INFO, "--- inserting payslip to monogodb ---");
+                
         payslipCollection().insertOne(payslipDoc);
-        logger.log(Level.INFO, "--- payslip inserted to monogodb successfully ---");
+        logger.log(Level.FINE, "--- payslip inserted to monogodb successfully ---");
         
         return payslipDoc.getObjectId("_id").toString();
         

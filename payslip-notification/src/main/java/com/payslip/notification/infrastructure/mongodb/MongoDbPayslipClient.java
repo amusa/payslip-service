@@ -42,7 +42,7 @@ public class MongoDbPayslipClient {
         Gson gson = new Gson();
         PayslipResponse payResponse = gson.fromJson(payslipJson, PayslipResponse.class);
 
-        logger.log(Level.INFO, "--- payslip returned and converted from db successfully ---");
+        logger.log(Level.FINE, "--- payslip returned and converted from db successfully ---");
 
         return payResponse;
 
@@ -77,7 +77,7 @@ public class MongoDbPayslipClient {
 
         }
 
-        logger.log(Level.INFO, "--- payslips retrieved for retry successfully ---");
+        logger.log(Level.FINE, "--- payslips retrieved for retry successfully ---");
 
         return payslips;
 
@@ -97,7 +97,7 @@ public class MongoDbPayslipClient {
 
         }
 
-        logger.log(Level.INFO, "--- notices retrieved for retry successfully ---");
+        logger.log(Level.FINE, "--- notices retrieved for retry successfully ---");
 
         return notices;
 
@@ -107,11 +107,9 @@ public class MongoDbPayslipClient {
         Gson gson = new Gson();
         String noticeJson = gson.toJson(notice);
 
-        Document noticeDoc = Document.parse(noticeJson);
-
-        logger.log(Level.INFO, "--- inserting notice to monogodb ---");
+        Document noticeDoc = Document.parse(noticeJson);       
         noticeCollection().insertOne(noticeDoc);
-        logger.log(Level.INFO, "--- notice inserted to monogodb successfully ---");
+        logger.log(Level.FINE, "--- notice inserted to monogodb successfully ---");
 
         return noticeDoc.getObjectId("_id").toString();
 

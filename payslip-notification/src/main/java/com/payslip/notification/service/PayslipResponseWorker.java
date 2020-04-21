@@ -19,11 +19,11 @@ public class PayslipResponseWorker implements Runnable {
 
     @Override
     public void run() {
-        logger.log(Level.INFO, "--- payslip retry worker triggered ---");
+        logger.log(Level.FINE, "--- payslip retry worker triggered ---");
         List<PayslipResponse> payslips = dbClient.getPayslipsForRetry("FAILED");
-        logger.log(Level.INFO, "--- payslips fetched. size={0} ---", (payslips != null ? payslips.size() : 0));
+        logger.log(Level.FINE, "--- payslips fetched. size={0} ---", (payslips != null ? payslips.size() : 0));
         for (PayslipResponse ps : payslips) {
-            logger.log(Level.INFO, "--- mailing mail id:{0} ---", ps.getRequestId());
+            logger.log(Level.FINE, "--- mailing mail id:{0} ---", ps.getRequestId());
             messenger.mailPayslip(ps, true);
         }
     }

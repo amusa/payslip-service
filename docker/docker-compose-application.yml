@@ -9,9 +9,11 @@ services:
     environment:
       - BOOTSTRAP_SERVERS=kafka:29092
       - EWS_HOST=outlook.nnpcgroup.com
-      - EWS_USER=COE_MAIL_AGENT
-      - EWS_PASSWORD=c03m@1ljk
+      - EWS_USER=payslip
+      - EWS_PASSWORD=P@y55lip
     #  - EWS_DOMAIN=chq
+      - PAY_DAY_CHECK=false
+  
     networks:
       - paynet      
     
@@ -41,10 +43,10 @@ services:
       - BOOTSTRAP_SERVERS=kafka:29092     
       - mongodb.url=mongodb://mongo_db   
       - EWS_HOST=outlook.nnpcgroup.com
-      - EWS_USER=COE_MAIL_AGENT
-      - EWS_PASSWORD=c03m@1ljk
+      - EWS_USER=payslip
+      - EWS_PASSWORD=P@y55lip
     #  - EWS_DOMAIN=chq
-      - AGENT_EMAIL=COE_MAIL_AGENT@nnpcgroup.com    
+      - AGENT_EMAIL=Payslip@nnpcgroup.com    
     networks:
       - paynet
       

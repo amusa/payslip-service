@@ -19,15 +19,15 @@ public class NoticeResponseWorker implements Runnable {
 
     @Override
     public void run() {
-        logger.log(Level.INFO, "--- notice retry worker triggered ---");
+        logger.log(Level.FINE, "--- notice retry worker triggered ---");
         List<Notification> notices = dbClient.getNoticesForRetry();
-        logger.log(Level.INFO, "--- notices fetched. size={0} ---", (notices != null ? notices.size() : 0));
+        logger.log(Level.FINE, "--- notices fetched. size={0} ---", (notices != null ? notices.size() : 0));
         for (Notification nt : notices) {
-            logger.log(Level.INFO, "--- emailing id:{0} ---", nt.getRequestId());
+            logger.log(Level.FINE, "--- emailing id:{0} ---", nt.getRequestId());
             try {
                 messenger.mailNotice(nt, true);
             } catch (Exception ex) {
-                Logger.getLogger(NoticeResponseWorker.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
     }

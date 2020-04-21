@@ -23,19 +23,18 @@ public class RequestParser {
 
     public static PayslipRequested parse(String emailSubject, Date dateSent, String emailFrom) throws ParseException {
         String[] tokens = emailSubject.split("\\s+");
-        //String staffId = null;
         String dateFrom = null;
         String dateTo = null;
 
         PayslipRequested request = new PayslipRequested();
         request.setSubject(emailSubject);
 
-        logger.log(Level.INFO, "--- parsing ---");
+        logger.log(Level.INFO, "--- parsing payslip request ---");
 
         if (tokens[0].toUpperCase().matches("#PAYSLIP")) {
             if (tokens.length > 1 && tokens[1].matches("\\d{1,2}[/|-]\\d{2,4}")) {
                 dateFrom = tokens[1];
-                logger.log(Level.INFO, "--- 1st date extracted: {0} ---", dateFrom);
+                logger.log(Level.FINE, "--- 1st date extracted: {0} ---", dateFrom);
 
                 String periodFrom[] = dateFrom.split("[/|-]");
 
@@ -44,11 +43,11 @@ public class RequestParser {
 
                 if (tokens.length > 2 && tokens[2].matches("\\d{1,2}[/|-]\\d{2,4}")) {
                     dateTo = tokens[2];
-                    logger.log(Level.INFO, "--- 2nd date extracted: {0} ---", dateTo);
+                    logger.log(Level.FINE, "--- 2nd date extracted: {0} ---", dateTo);
                 }
 
                 if (null == dateTo) {
-                    logger.log(Level.INFO, "--- setting payDateTo to payDateFrom: {0} ---", fP);
+                    logger.log(Level.FINE, "--- setting payDateTo to payDateFrom: {0} ---", fP);
                     request.setPeriodTo(fP);
                 } else {
                     String periodTo[] = dateTo.split("[/|-]");
@@ -62,14 +61,14 @@ public class RequestParser {
                 request.setPeriodTo(currentPeriod);
             }
 
-            logger.log(Level.INFO, "--- setting dateSent: {0} ---", dateSent);
+            logger.log(Level.FINE, "--- setting dateSent: {0} ---", dateSent);
             request.setDateSent(dateSent);
-            logger.log(Level.INFO, "--- setting emailFrom: {0} ---", emailFrom);
+            logger.log(Level.FINE, "--- setting emailFrom: {0} ---", emailFrom);
             request.setEmailFrom(emailFrom);
 
             return request;
         }
-        throw new RuntimeException("Not payslip request");
+        throw new RuntimeException("Invalid Payslip request. Syntax: #PAYSLIP MM/YY or #PAYSLIP MM/YY MM/YY");
     }
 
 //    public static PayslipRequested parse2(String emailSubject, Date dateSent, String emailFrom) throws ParseException {
@@ -129,7 +128,7 @@ public class RequestParser {
 //        return null;
 //    }
     private static PayPeriod getPayPeriod(String year, String month) {
-        logger.log(Level.INFO, "--- generating pay period: year={0}, month={1} ---", new Object[]{year, month});
+        logger.log(Level.FINE, "--- generating pay period: year={0}, month={1} ---", new Object[]{year, month});
         if (null != year && null != month) {
             return new PayPeriod(Integer.parseInt(year), Integer.parseInt(month));
         }
