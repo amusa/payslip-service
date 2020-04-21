@@ -18,10 +18,12 @@ public class PayPeriodViewValidator implements Validator {
 
     private final PayPeriod fPeriod;
     private final PayPeriod tPeriod;
+    private final Boolean payDayCheck;
 
-    public PayPeriodViewValidator(PayPeriod fPeriod, PayPeriod tPeriod) {
+    public PayPeriodViewValidator(PayPeriod fPeriod, PayPeriod tPeriod, Boolean payDayCheck) {
         this.fPeriod = fPeriod;
         this.tPeriod = tPeriod;
+        this.payDayCheck = payDayCheck;
     }
 
     @Override
@@ -39,8 +41,8 @@ public class PayPeriodViewValidator implements Validator {
             if (payPeriod.getMonth() > LocalDate.now().getMonthValue()) {
                 throw new PayPeriodException("Cannot view future payslip");
             } else if (payPeriod.getMonth() == LocalDate.now().getMonthValue()) {
-                if (LocalDate.now().getDayOfMonth() < 23) {
-                    throw new PayPeriodException("Payslip not due");
+                if (payDayCheck && LocalDate.now().getDayOfMonth() < 23) {
+                    throw new PayPeriodException("Current month payslip will be available as from 23rd day of the month. Please check back.");
                 }
             }
         }

@@ -23,7 +23,7 @@ public class PayPeriodValidator implements Validator {
     @Override
     public void validate() throws PayPeriodException {
         if (period.getMonth() < 1 || period.getMonth() > 12) {
-            throw new PayPeriodException("Pay period out of bound");
+            throw new PayPeriodException("Pay period selected is invalid. Please correct your dates and try again");
         }
     }
 

@@ -89,7 +89,7 @@ public class JCoPayslipService implements PayslipService {
         connectProperties.setProperty(DestinationDataProvider.JCO_POOL_CAPACITY, jcoPoolCapacity);
         connectProperties.setProperty(DestinationDataProvider.JCO_PEAK_LIMIT, jcoPeakLimit);
         createDestinationDataFile(sapRfcDestination, connectProperties);
-       // logger.log(Level.INFO, "--- Jco service initialized ---\n{0}", connectProperties);
+        // logger.log(Level.INFO, "--- Jco service initialized ---\n{0}", connectProperties);
     }
 
     private void createDestinationDataFile(String destinationName, Properties connectProperties) {
@@ -117,58 +117,55 @@ public class JCoPayslipService implements PayslipService {
 
         destination = JCoDestinationManager.getDestination(sapRfcDestination);
 
-        logger.log(Level.INFO, "--- jco destination initialized ---");
+        logger.log(Level.FINE, "--- jco destination initialized ---");
         JCoFunction bapiGetIByEmailFunction = destination.getRepository().getFunction("ZUSER_GET_BY_EMAIL");
         JCoFunction bapiPayListFunction = destination.getRepository().getFunction("ZBAPI_GET_PAYROLL_RESULT_LIST");
-        logger.log(Level.INFO, "--- jco bapiPayListFunction initialized ---");
+        logger.log(Level.FINE, "--- jco bapiPayListFunction initialized ---");
         JCoFunction bapiPayslipPdfFunction = destination.getRepository().getFunction("ZBAPI_GET_PAYSLIP_PDF");
-        logger.log(Level.INFO, "--- jco bapiPayslipPdfFunction initialized ---");
+        logger.log(Level.FINE, "--- jco bapiPayslipPdfFunction initialized ---");
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         if (bapiGetIByEmailFunction == null) {
-            logger.log(Level.INFO, "ZUSER_GET_BY_EMAIL not found in SAP.");
+            logger.log(Level.FINE, "ZUSER_GET_BY_EMAIL not found in SAP.");
             throw new RuntimeException("ZUSER_GET_BY_EMAIL not found in SAP.");
         }
 
         if (bapiPayListFunction == null) {
-            logger.log(Level.INFO, "ZBAPI_GET_PAYROLL_RESULT_LIST not found in SAP.");
+            logger.log(Level.FINE, "ZBAPI_GET_PAYROLL_RESULT_LIST not found in SAP.");
             throw new RuntimeException("ZBAPI_GET_PAYROLL_RESULT_LIST not found in SAP.");
         }
 
         if (bapiPayslipPdfFunction == null) {
-            logger.log(Level.INFO, "ZBAPI_GET_PAYSLIP_PDF not found in SAP.");
+            logger.log(Level.FINE, "ZBAPI_GET_PAYSLIP_PDF not found in SAP.");
             throw new RuntimeException("ZBAPI_GET_PAYSLIP_PDF not found in SAP.");
         }
 
-        logger.log(Level.INFO, "--- Begining session ---");
+        logger.log(Level.FINE, "--- Begining session ---");
 
         JCoContext.begin(destination);
         try {
             bapiGetIByEmailFunction.getImportParameterList().setValue("EMAIL", email.toUpperCase());
-            logger.log(Level.INFO, "--- Executing 'ZUSER_GET_BY_EMAIL' ---");
             bapiGetIByEmailFunction.execute(destination);
-            logger.log(Level.INFO, "--- Executed 'ZUSER_GET_BY_EMAIL' successfully ---");
+            logger.log(Level.FINE, "--- Executed 'ZUSER_GET_BY_EMAIL' successfully ---");
 
             JCoStructure userIdReturnStructure = bapiGetIByEmailFunction.getExportParameterList().getStructure("RESULT");
-                     String staffId = userIdReturnStructure.getString("PERNR");
+            String staffId = userIdReturnStructure.getString("PERNR");
             String retEmail = userIdReturnStructure.getString("USRID_LONG");
-            logger.log(Level.INFO, "--- StaffId and Email returned from 'ZUSER_GET_BY_EMAIL':{0}, {1} ---", new Object[]{staffId, retEmail});
+            logger.log(Level.FINE, "--- StaffId and Email returned from 'ZUSER_GET_BY_EMAIL':{0}, {1} ---", new Object[]{staffId, retEmail});
 
             staffId = staffId.replaceFirst("^0+", "");
-           
 
             if (null == staffId || staffId.isEmpty()) {
-                throw new RuntimeException("User ID could not be derived using email provided");
+                throw new RuntimeException(String.format("Your email: %s does not match the email in you SAP profile. Please contact HR", email));
             }
-            
+
             bapiPayListFunction.getImportParameterList().setValue("EMPLOYEENUMBER", staffId);
             bapiPayListFunction.getImportParameterList().setValue("FROMDATE", sdf.format(dateFrom));
             bapiPayListFunction.getImportParameterList().setValue("TODATE", sdf.format(dateTo));
 
-            logger.log(Level.INFO, "--- Executing 'BAPI_GET_PAYROLL_RESULT_LIST' ---");
             bapiPayListFunction.execute(destination);
-            logger.log(Level.INFO, "--- Executed 'BAPI_GET_PAYROLL_RESULT_LIST' successfully ---");
+            logger.log(Level.FINE, "--- Executed 'BAPI_GET_PAYROLL_RESULT_LIST' successfully ---");
 
             JCoStructure payrollReturnStructure = bapiPayListFunction.getExportParameterList().getStructure("RETURN");
             if (payrollReturnStructure.getString("TYPE").equals("E")) {
@@ -190,9 +187,8 @@ public class JCoPayslipService implements PayslipService {
                 bapiPayslipPdfFunction.getImportParameterList().setValue("PAYSLIPVARIANT", "NNPC-PS");
 
                 try {
-                    logger.log(Level.INFO, "--- Executing 'ZBAPI_GET_PAYSLIP_PDF' ---");
                     bapiPayslipPdfFunction.execute(destination);
-                    logger.log(Level.INFO, "--- Executed 'ZBAPI_GET_PAYSLIP_PDF' successfully ---");
+                    logger.log(Level.FINE, "--- Executed 'ZBAPI_GET_PAYSLIP_PDF' successfully ---");
 
                     JCoStructure pdfReturnStructure = bapiPayslipPdfFunction.getExportParameterList().getStructure("RETURN");
                     if (pdfReturnStructure.getString("TYPE").equals("E")) {
@@ -201,7 +197,7 @@ public class JCoPayslipService implements PayslipService {
 
                     byte[] payslip = bapiPayslipPdfFunction.getExportParameterList().getByteArray("PAYSLIP");
 
-                    logger.log(Level.INFO, "--- Payslip Pdf returned  ---");
+                    logger.log(Level.FINE, "--- Payslip Pdf returned  ---");
 
                     PayData payData = new PayData(staffId, payslip, payDate, offCycleReason);
                     payDataList.add(payData);
