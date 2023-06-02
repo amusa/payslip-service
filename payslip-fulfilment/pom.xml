@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.payslip</groupId>
     <artifactId>payslip-fulfilment</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>payslip-fulfilment</name>
 
@@ -16,22 +18,32 @@
         <version.thorntail>2.0.0.Final</version.thorntail>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <docker.image>nnpc/payslip-fulfilment:1.0.0</docker.image> 
+        <docker.image>nnpc/payslip-fulfilment:1.0.0</docker.image>
         <docker.host.address>localhost</docker.host.address>
-        <swarm.port>8081</swarm.port>  
+        <swarm.port>8081</swarm.port>
+
+        <compiler-plugin.version>3.11.0</compiler-plugin.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.version>3.0.2.Final</quarkus.platform.version>
+        <skipITs>true</skipITs>
+        <surefire-plugin.version>3.0.0</surefire-plugin.version>
     </properties>
-   
-    <dependencies>        
+
+    <dependencies>
         <dependency>
             <groupId>com.payslip</groupId>
-            <artifactId>payslip-processing-lib</artifactId>   
-            <version>${project.version}</version>        
-        </dependency>     
+            <artifactId>payslip-processing-lib</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.payslip</groupId>
-            <artifactId>payslip-common-lib</artifactId>   
-            <version>${project.version}</version>        
-        </dependency>       
+            <artifactId>payslip-common-lib</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -42,7 +54,7 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.5</version>
-        </dependency> 
+        </dependency>
         <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>ejb</artifactId>
@@ -52,11 +64,21 @@
             <artifactId>javaee-api</artifactId>
             <version>7.0</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>com.sap</groupId>
             <artifactId>sapjco3</artifactId>
             <version>3.0</version>       
-        </dependency> 
+        </dependency>  -->
+
+        <dependency>
+            <groupId>com.sap</groupId>
+            <artifactId>sapjco3</artifactId>
+            <version>3.1</version>
+            <scope>system</scope>
+
+            <systemPath>${basedir}/sapjco/sapjco3.jar</systemPath>
+        </dependency>
+
         <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>microprofile</artifactId>
@@ -64,13 +86,13 @@
         <dependency>
             <groupId>com.microsoft.ews-java-api</groupId>
             <artifactId>ews-java-api</artifactId>
-            <version>2.0</version>                       
-        </dependency>  
+            <version>2.0</version>
+        </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver</artifactId>
             <version>3.8.0</version>
-        </dependency>   
+        </dependency>
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -80,19 +102,19 @@
             <groupId>com.logentries</groupId>
             <artifactId>logentries-appender</artifactId>
             <version>RELEASE</version>
-        </dependency>  
+        </dependency>
     </dependencies>
-  
-    
+
+
     <build>
         <finalName>${project.artifactId}</finalName>
-        
-        <plugins> 
-           
+
+        <plugins>
+
             <plugin>
                 <groupId>io.thorntail</groupId>
                 <artifactId>thorntail-maven-plugin</artifactId>
-                <version>${version.thorntail}</version>        
+                <version>${version.thorntail}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -106,11 +128,11 @@
                         <swarm.port.offset>1</swarm.port.offset>
                     </properties>
                 </configuration>
-            </plugin>  
+            </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>0.26.0</version>                
+                <version>0.26.0</version>
                 <configuration>
                     <images>
                         <image>
@@ -125,18 +147,21 @@
                                     <inline>
                                         <files>
                                             <file>
-                                                <source>${project.build.directory}/${project.artifactId}-thorntail.jar</source>
+                                                <source>
+                                                    ${project.build.directory}/${project.artifactId}-thorntail.jar</source>
                                             </file>
                                             <file>
                                                 <source>sapjco/libsapjco3.so</source>
                                                 <outputDirectory>/sapjco</outputDirectory>
-                                            </file> 
+                                            </file>
                                         </files>
                                     </inline>
                                     <!--<descriptorRef>artifact</descriptorRef>-->
                                 </assembly>
-                                <cmd>java -Djava.net.preferIPv4Stack=true -Djava.library.path=/maven/sapjco/  -jar /maven/${project.artifactId}-thorntail.jar</cmd>
-                                                         
+                                <cmd>java -Djava.net.preferIPv4Stack=true
+                                    -Djava.library.path=/maven/sapjco/ -jar
+                                    /maven/${project.artifactId}-thorntail.jar</cmd>
+
 
                             </build>
                             <!--                            <run>
@@ -178,11 +203,11 @@
                             <goal>logs</goal>
                         </goals>
                     </execution>
-                </executions>                
-            </plugin>            
+                </executions>
+            </plugin>
         </plugins>
     </build>
-    
+
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -55,11 +55,11 @@
             <scope>provided</scope>
         </dependency>
         -->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.sap</groupId>
             <artifactId>sapjco3</artifactId>
             <version>3.0</version>       
-        </dependency> 
+        </dependency>  -->
         <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>microprofile</artifactId>
