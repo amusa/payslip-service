@@ -37,8 +37,8 @@ public class Bootstrapper {
             subscriptionManager.subscribe();           
         }
 
-        Log.infov("***Processing delta messages***");
-        subscriptionManager.processDeltaMessages();
+        // Log.infov("***Processing delta messages***");
+        // subscriptionManager.processDeltaMessages();
 
     }
 }

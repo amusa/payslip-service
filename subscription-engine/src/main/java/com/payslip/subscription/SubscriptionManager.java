@@ -30,8 +30,14 @@ public class SubscriptionManager {
     @ConfigProperty(name = "app.notificationHost")
     String notificationHost;
 
+    @ConfigProperty(name = "app.lifecycleHost")
+    String lifecycleHost;
+
     @ConfigProperty(name = "app.redirectUri")
     String redirectUri;
+
+    @ConfigProperty(name = "app.userId")
+    String userId;
 
     private static final String APP_ONLY = "APP-ONLY";
 
@@ -71,8 +77,9 @@ public class SubscriptionManager {
         final var subscriptionRequest = new Subscription();
         subscriptionRequest.changeType = ChangeType.CREATED.toString();
         subscriptionRequest.notificationUrl = notificationHost + "/notification/listen";
-        subscriptionRequest.lifecycleNotificationUrl = notificationHost + "/lifecycle";
-        subscriptionRequest.resource = "users/00f2dc3e-2858-4c93-8c5e-afeff10a7a34/mailfolders('inbox')/messages?$select=id,createdDateTime,sender,toRecipients,sentDateTime,Subject,receivedDateTime,from,unsubscribeData";
+        subscriptionRequest.lifecycleNotificationUrl = lifecycleHost + "/lifecycle";
+        subscriptionRequest.resource = "users/" + userId
+                + "/mailfolders('inbox')/messages?$select=id,createdDateTime,sender,toRecipients,sentDateTime,Subject,receivedDateTime,from,unsubscribeData";
         subscriptionRequest.clientState = UUID.randomUUID().toString();
         subscriptionRequest.includeResourceData = true;
         subscriptionRequest.encryptionCertificate = certificateStore.getBase64EncodedCertificate();
@@ -135,7 +142,7 @@ public class SubscriptionManager {
         LinkedList<Option> requestOptions = new LinkedList<Option>();
         requestOptions.add(new HeaderOption("Prefer", "odata.maxpagesize=10"));
 
-        MessageDeltaCollectionPage delta = graphClient.users("maliska@wxy5c.onmicrosoft.com").mailFolders(
+        MessageDeltaCollectionPage delta = graphClient.users(userId).mailFolders(
                 "inbox")
                 .messages()
                 .delta()
