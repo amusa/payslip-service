@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Retry;
 
 /**
  *
@@ -93,9 +95,8 @@ public class JcoPayslipService implements PayslipService {
     }
 
     @Override
-    // @CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4,
-    // failureRatio = 0.75, delay = 50000)
-    // @Retry(retryOn = { JCoException.class }, maxRetries = 1, maxDuration = 10000)
+    @CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4, failureRatio = 0.75, delay = 5000)
+    @Retry(retryOn = { JCoException.class}, maxRetries = 2, maxDuration = 10000)
     public List<PayData> getPayslipBytes(String email, LocalDate dateFrom, LocalDate dateTo) throws JCoException {
         Log.infov("--- getPayslipBytes called with parameters: Email={0}, dateFrom={1}, dateTo={2} ---",
                 new Object[] { email, dateFrom, dateTo });

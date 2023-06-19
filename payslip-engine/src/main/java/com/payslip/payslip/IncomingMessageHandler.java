@@ -58,6 +58,7 @@ public class IncomingMessageHandler {
                     .getPayslipBytes(request.emailFrom,
                             request.periodFrom.getDate(),
                             request.periodTo.getDate(MonthMarker.END));
+            Log.infov("---payslipService.getPayslipBytes() executed successfully---\nData:{0}", payDataList);
         } catch (Exception ex) {
             Log.fatalv("--- firing notification for error message {0} ---", ex.getMessage());
 
@@ -75,8 +76,6 @@ public class IncomingMessageHandler {
             return message.ack();
 
         }
-
-        Log.infov("---payslipService.getPayslipBytes() executed successfully---\nData:{0}", payDataList);
 
         PayslipGenerated event = PayslipUtil.makePayslipGeneratedEvent(request, payDataList);
         events.fire(event);
