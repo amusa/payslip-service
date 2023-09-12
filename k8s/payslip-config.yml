@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payslip-config
+  labels:
+    app: payslip
+data:
+  TENANT_ID: "c9bfec4a-5ccc*****"
+  CLIENT_ID: "be45d516-8206*****"  
+  EMAIL_USER: "3105e3ce-2877****"
+  STORE_NAME: "cert/JKSkeystore1.jks"
+  SECRET_ALIAS: "selfsignedjks"
+  NOTIFICATION_HOST: "https://c1f7-102-215-57-228.ngrok-free.app"
+  LIFECYCLE_HOST: "https://c1f7-102-215-57-228.ngrok-free.app"
+  PAYDAY_CHECK: "false"
