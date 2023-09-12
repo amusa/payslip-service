@@ -160,7 +160,7 @@ public class JcoPayslipService implements PayslipService {
 
             if (null == staffId || staffId.isEmpty()) {
                 throw new RuntimeException(String.format(
-                        "Your email: %s does not match the email in you SAP profile. Please contact HR", email));
+                        "Your email: %s does not match the email in your SAP profile. \n\nPlease contact HCM.", email));
             }
             Log.info("---CHECKPOINT #8---");
             bapiPayListFunction.getImportParameterList().setValue("EMPLOYEENUMBER", staffId);
