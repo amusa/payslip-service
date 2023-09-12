@@ -76,8 +76,8 @@ public class SubscriptionManager {
         // Create the subscription
         final var subscriptionRequest = new Subscription();
         subscriptionRequest.changeType = ChangeType.CREATED.toString();
-        subscriptionRequest.notificationUrl = notificationHost + "/notification/listen";
-        subscriptionRequest.lifecycleNotificationUrl = lifecycleHost + "/lifecycle";
+        subscriptionRequest.notificationUrl = notificationHost + "/api/notification/listen";
+        subscriptionRequest.lifecycleNotificationUrl = lifecycleHost + "/api/lifecycle";
         subscriptionRequest.resource = "users/" + userId
                 + "/mailfolders('inbox')/messages?$select=id,createdDateTime,sender,toRecipients,sentDateTime,Subject,receivedDateTime,from,unsubscribeData";
         subscriptionRequest.clientState = UUID.randomUUID().toString();

@@ -5,6 +5,7 @@ package com.payslip.subscription;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -32,12 +33,13 @@ import org.slf4j.LoggerFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Service responsible for certificate operations: - getting the certificate - validating signatures
+ * Service responsible for certificate operations: - getting the certificate -
+ * validating signatures
  * - decrypting content
  */
 @ApplicationScoped
 public class CertificateStoreService {
-      
+
     @ConfigProperty(name = "cert.storename")
     private String storeName;
 
@@ -48,7 +50,6 @@ public class CertificateStoreService {
     private String alias;
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
-
 
     public CertificateStoreService() {
         // Add the BouncyCastle provider for
@@ -66,11 +67,15 @@ public class CertificateStoreService {
     private KeyStore getCertificateStore()
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
         var keystore = KeyStore.getInstance("JKS");
-        keystore.load(new FileInputStream(storeName), storePassword.toCharArray());
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(storeName);
+
+        // keystore.load(new FileInputStream(storeName), storePassword.toCharArray());
+        keystore.load(inputStream, storePassword.toCharArray());
         log.info("***Keystore loaded successfully***");
         return keystore;
     }
-
 
     /**
      * @return the certificate specified in application.yml encoded in base64
@@ -86,7 +91,6 @@ public class CertificateStoreService {
         }
     }
 
-
     /**
      * @return the certificate ID or alias specified in application.yml
      */
@@ -94,9 +98,9 @@ public class CertificateStoreService {
         return alias;
     }
 
-
     /**
-     * @param base64encodedSymmetricKey the base64-encoded symmetric key to be decrypted
+     * @param base64encodedSymmetricKey the base64-encoded symmetric key to be
+     *                                  decrypted
      * @return the decrypted symmetric key
      */
     public byte[] getEncryptionKey(@Nonnull final String base64encodedSymmetricKey) {
@@ -114,10 +118,10 @@ public class CertificateStoreService {
         }
     }
 
-
     /**
-     * @param encryptionKey the symmetric key that was used to sign the encrypted data
-     * @param encryptedData the signed encrypted data to validate
+     * @param encryptionKey       the symmetric key that was used to sign the
+     *                            encrypted data
+     * @param encryptedData       the signed encrypted data to validate
      * @param comparisonSignature the expected signature
      * @return true if the signature is valid, false if not
      */
@@ -139,7 +143,6 @@ public class CertificateStoreService {
             return false;
         }
     }
-
 
     /**
      * @param encryptionKey the encryption key to use to decrypt the data
