@@ -31,3 +31,6 @@ payslip-processing/payslip-processing-lib/target/*
 hs_err_pid*
 
 *.jcoDestination
+*.classpath
+*.project
+*.jks
