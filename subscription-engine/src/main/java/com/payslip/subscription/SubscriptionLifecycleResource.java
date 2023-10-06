@@ -1,5 +1,7 @@
 package com.payslip.subscription;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 
@@ -54,8 +56,9 @@ public class SubscriptionLifecycleResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public CompletableFuture<Response> handleLifecycleNotification(@Nonnull String jsonPayload) throws JsonProcessingException {
-        Log.infov("***Handling lifecycle notification***\n\tPayload: {0}", jsonPayload);
+    public CompletableFuture<Response> handleLifecycleNotification(@Nonnull String jsonPayload)
+            throws JsonProcessingException {
+        Log.infov("***Handling lifecycle notification***\n\tPayload: {0}\n", jsonPayload);
 
         JSONObject jObj = new JSONObject(jsonPayload);
         // String subscriptionId = jObj.getJSONObject("pageInfo").getString("pageName");
@@ -67,11 +70,14 @@ public class SubscriptionLifecycleResource {
         JSONObject obj = (JSONObject) iterator.next();
         String eventType = obj.getString("lifecycleEvent");
         String subscriptionId = obj.getString("subscriptionId");
+        String expirationDateTime = obj.getString("subscriptionExpirationDateTime");
 
-        Log.infov("***Parsing Lifecycle event***\n\teventType: {0}\n\tSubscriptionId:{1}", eventType, subscriptionId);
+        Log.infov(
+                "***Parsing Lifecycle event***\n\teventType: {0}\n\tSubscriptionId: {1}\n\tSubscription Expiration DateTime: {2}",
+                eventType, subscriptionId, expirationDateTime);
         // }
 
-        if (eventType.equals("reauthorizationRequired")) {
+        if (eventType.equals("reauthorizationRequired") || eventType.equals("subscriptionRemoved")) {
             Log.infov("***Resubscribing notification: {0}***", subscriptionId);
             subscriptionManager.resubscribe(subscriptionId);
         } else if (eventType.equals("missed")) {
@@ -83,5 +89,4 @@ public class SubscriptionLifecycleResource {
         return CompletableFuture.completedFuture(Response.ok().build());
     }
 
-    
 }

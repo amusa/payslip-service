@@ -20,6 +20,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -47,16 +49,18 @@ public class NotificationListenerResource {
     private CertificateStoreService certificateStore;
 
     @Inject
+    private SubscriptionManager subscriptionManager;
+
+    @Inject
     Event<NewMessageNotification> events;
 
     ObjectMapper mapper;
-    
+
     {
-         mapper = JsonMapper.builder()
+        mapper = JsonMapper.builder()
                 .findAndAddModules()
                 .build();
     }
-
 
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
@@ -68,7 +72,6 @@ public class NotificationListenerResource {
 
         Log.infov("***HANDLE VALIDATION: Validation token received: {0}***", validationToken);
 
-       
         return CompletableFuture.completedFuture(Response.status(200).entity(validationToken).build());
 
     }
@@ -101,24 +104,31 @@ public class NotificationListenerResource {
 
                 // Only process if we know about this subscription AND
                 // the client state in the notification matches
-                //if (subscription != null
-                //        && subscription.clientState.equals(notification.clientState)) {
-                    if (notification.encryptedContent != null) {                        
-                        // With encrypted content, this is a new channel message
-                        // notification with encrypted resource data
-                        processNewMessageNotification(notification, subscription);
-                    }
-               // }
+                // if (subscription != null
+                // && subscription.clientState.equals(notification.clientState)) {
+                if (notification.encryptedContent != null) {
+                    // With encrypted content, this is a new channel message
+                    // notification with encrypted resource data
+                    processNewMessageNotification(notification, subscription);
+                }
+                // }
             }
         }
 
         return CompletableFuture.completedFuture(Response.accepted().build());
     }
 
-    
+    @DELETE
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/delete")
+    public CompletableFuture<Response> deleteSubscription(@QueryParam("id") String subscriptionId) {
+        Log.infov("***deleting subscription ID: {0}***", subscriptionId);
+        subscriptionManager.deleteSubscription(subscriptionId);
+        return CompletableFuture.completedFuture(Response.status(200).entity(subscriptionId).build()); 
+    }
 
-    
-// TODO: migrate function to a dedicated bean
+    // TODO: migrate function to a dedicated bean
     /**
      * Processes a new channel message notification by decrypting the included
      * resource data
@@ -150,16 +160,13 @@ public class NotificationListenerResource {
             NewMessageNotification newMessage = MessageAdapter.convert(message);
             Log.infov("***Fireing new message: {0}***", mapper.writeValueAsString(newMessage));
             fireEvent(newMessage);
-            //new NewMessageNotification(message);
-            
+            // new NewMessageNotification(message);
 
         }
     }
 
-    
     private void fireEvent(NewMessageNotification event) {
         events.fire(event);
     }
-
 
 }

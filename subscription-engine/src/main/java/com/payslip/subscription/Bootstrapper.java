@@ -1,5 +1,7 @@
 package com.payslip.subscription;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,15 +28,20 @@ public class Bootstrapper {
         Optional<Subscription> subscriptionOpt = subscriptionManager.getExistingSubscription();
         if (subscriptionOpt.isPresent()) {
             Subscription subscription = subscriptionOpt.get();
-            Log.infov("***Subscription found: {0}***", subscription.id);
-            // if (ChronoUnit.MINUTES.between(OffsetDateTime.now(), subscription.expirationDateTime) < 15) {
-            //     Log.infov("***Subscription {0} expiration less than 15 minutes: {1}***",subscription.id, subscription.expirationDateTime.toString());
-            //     Log.infov("***Re-subscribing {0} ***",subscription.id);
-            //     subscriptionManager.resubscribe(subscription.id);
-            // }
-        }else{
+            Log.infov(
+                    "***Subscription found***\n\tSubscription ID: {0}\n\tChange Notification URL: {1}\n\tLifecycle Notification URL: {2}\n\tSubscription Expiration Duration: {3} mins",
+                    subscription.id, subscription.notificationUrl, subscription.lifecycleNotificationUrl,
+                    ChronoUnit.MINUTES.between(OffsetDateTime.now(), subscription.expirationDateTime));
+
+            if (ChronoUnit.MINUTES.between(OffsetDateTime.now(),
+                    subscription.expirationDateTime) < 15) {
+                Log.infov("***Re-subscribing {0} ***", subscription.id);
+                subscriptionManager.resubscribe(subscription.id);
+            }
+
+        } else {
             Log.infov("***No subscriptions found***");
-            subscriptionManager.subscribe();           
+            subscriptionManager.subscribe();
         }
 
         // Log.infov("***Processing delta messages***");
