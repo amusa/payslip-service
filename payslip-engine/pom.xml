@@ -67,22 +67,15 @@
       <groupId>com.sap</groupId>
       <artifactId>sapjco3</artifactId>
       <version>${sap.jco.version}</version>    
-      <scope>compile</scope>    
-      <systemPath>${basedir}/sapjco/sapjco3.jar</systemPath> 
+      <scope>system</scope>    
+      <systemPath>${basedir}/sapjco/sapjco3.jar</systemPath>      
     </dependency>     -->
     <!-- https://mvnrepository.com/artifact/com.sap.conn.jco/sapjco3 -->
     <dependency>
       <groupId>com.sap.conn.jco</groupId>
       <artifactId>sapjco3</artifactId>
       <version>3.1.7</version>
-    </dependency>
-    <!-- <dependency>
-      <groupId>com.sap.conn.jco</groupId>
-      <artifactId>libsapjco3</artifactId>
-      <version>3.1.7</version>      
-      <type>zip</type>
-      <classifier>linuxx86_64</classifier>
-    </dependency> -->
+    </dependency>    
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -198,7 +191,7 @@
             </goals>
             <configuration>
               <stripVersion>true</stripVersion>
-              <outputDirectory>${project.build.directory}/quarkus-app/lib/lib</outputDirectory>
+              <outputDirectory>${project.build.directory}/quarkus-app</outputDirectory>
               <artifactItems>
                 <artifactItem>
                   <groupId>com.sap.conn.jco</groupId>
@@ -230,17 +223,4 @@
       </properties>
     </profile>
   </profiles>
-
-  <!-- <repositories>
-    <repository>
-      <id>my-repo1</id>
-      <name>your custom repo</name>
-      <url>http://maven.mit.edu/nexus/content/repositories/public</url>
-    </repository>
-    <repository>
-      <id>my-repo2</id>
-      <name>your custom repo</name>
-      <url>http://jarsm2.dyndns.dk</url>
-    </repository>
-  </repositories> -->
 </project>
