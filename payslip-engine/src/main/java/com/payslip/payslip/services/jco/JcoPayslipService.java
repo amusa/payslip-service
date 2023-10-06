@@ -95,7 +95,7 @@ public class JcoPayslipService implements PayslipService {
     }
 
     @Override
-    @CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4, failureRatio = 0.75, delay = 5000)
+    //@CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4, failureRatio = 0.5, delay = 10000)
     @Retry(retryOn = { JCoException.class}, maxRetries = 2, maxDuration = 10000)
     public List<PayData> getPayslipBytes(String email, LocalDate dateFrom, LocalDate dateTo) throws JCoException {
         Log.infov("--- getPayslipBytes called with parameters: Email={0}, dateFrom={1}, dateTo={2} ---",
