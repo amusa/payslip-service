@@ -13,4 +13,6 @@ data:
   SECRET_ALIAS: "selfsignedjks"
   NOTIFICATION_HOST: "https://c1f7-102-215-57-228.ngrok-free.app"
   LIFECYCLE_HOST: "https://c1f7-102-215-57-228.ngrok-free.app"
+  SUBSCRIPTION_DURATION: 60
   PAYDAY_CHECK: "false"
+  AWS_SSL_CERT_ARN: "arn:aws:acm:eu-west-1:*654722***:certificate/**86488-edd5-4390**************a"
