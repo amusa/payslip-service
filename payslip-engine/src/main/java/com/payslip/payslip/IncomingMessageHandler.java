@@ -70,7 +70,7 @@ public class IncomingMessageHandler {
             notice.requestId = request.id;
             notice.subject = request.subject;
             notice.message = ex.getMessage();
-
+//TODO: WORK ON ACKNOWLEDGEMENT
             events.fire(notice);
 
             return message.ack();
