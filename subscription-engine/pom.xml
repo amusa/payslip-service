@@ -61,18 +61,29 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
-    </dependency>
-    <dependency>
+    </dependency>    
+    <!-- <dependency>
       <groupId>com.microsoft.graph</groupId>
-      <artifactId>microsoft-graph-beta</artifactId>
-      <version>0.73.0-SNAPSHOT</version>
+      <artifactId>microsoft-graph</artifactId>
+      <version>5.71.0</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-databind</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
+    </dependency> -->
+    <dependency>
+      <groupId>com.microsoft.graph</groupId>
+      <artifactId>microsoft-graph-beta</artifactId>
+      <version>0.78.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>    
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
@@ -215,7 +226,7 @@
               <resources>
                 <resource>
                   <directory>${basedir}/cert</directory>
-                   <!-- <directory>${project.build.directory}/cert</directory> -->
+                  <!-- <directory>${project.build.directory}/cert</directory> -->
                   <!--<include>*.[MIME-TYPE]</include>-->
                   <filtering>false</filtering>
                 </resource>
@@ -240,4 +251,11 @@
       </properties>
     </profile>
   </profiles>
+  <repositories>
+    <repository>
+      <id>sonatype-snapshot</id>
+      <name>Sonatype Snapshot</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
 </project>
