@@ -39,6 +39,9 @@ public class SubscriptionManager {
     @ConfigProperty(name = "app.userId")
     String userId;
 
+    @ConfigProperty(name = "app.subscriptionDuration")
+    Long subscriptionDuration;
+
     private static final String APP_ONLY = "APP-ONLY";
 
     @Inject
@@ -62,7 +65,7 @@ public class SubscriptionManager {
 
         final GraphServiceClient<Request> graphClient = graphClientProvider.getGraphClient();
 
-        Log.infov("***checking multiple subscriptions***");
+        // Log.infov("***checking multiple subscriptions***");
 
         // Apps are only allowed one subscription to the /teams/getAllMessages resource
         // If we already had one, delete it so we can create a new one
@@ -84,9 +87,12 @@ public class SubscriptionManager {
         subscriptionRequest.includeResourceData = true;
         subscriptionRequest.encryptionCertificate = certificateStore.getBase64EncodedCertificate();
         subscriptionRequest.encryptionCertificateId = certificateStore.getCertificateId();
-        subscriptionRequest.expirationDateTime = OffsetDateTime.now().plusHours(2);
+        subscriptionRequest.expirationDateTime = OffsetDateTime.now().plusMinutes(subscriptionDuration);
 
-        Log.infov("***Subscribing to mail notification on url: {0}***", notificationHost);
+        Log.infov(
+                "***Subscribing to message notification***\n\tChange Notification URL: {0}\n\tLifecycle Notification URL: {1}\n\tSubscription Duration: {2} mins",
+                subscriptionRequest.notificationUrl, subscriptionRequest.lifecycleNotificationUrl,
+                subscriptionDuration);
 
         final var subscriptionFuture = graphClient.subscriptions().buildRequest().postAsync(subscriptionRequest)
                 .thenApply(subscription -> {
@@ -123,7 +129,7 @@ public class SubscriptionManager {
         final GraphServiceClient<Request> graphClient = graphClientProvider.getGraphClient();
 
         Subscription subscription = new Subscription();
-        subscription.expirationDateTime = OffsetDateTime.now().plusHours(2);
+        subscription.expirationDateTime = OffsetDateTime.now().plusMinutes(subscriptionDuration);
 
         var subscriptionFuture = graphClient.subscriptions(subscriptionId)
                 .buildRequest()
@@ -153,5 +159,10 @@ public class SubscriptionManager {
             Log.infov("***Processing new message:***\n\tId:{0}, Subject:{1}, Sender:{2}, Recipient:{3}",
                     message.id, message.subject, message.from, mapper.writeValueAsString(message.toRecipients));
         }
+    }
+
+    public void deleteSubscription(@Nonnull String subscriptionId) {
+        final GraphServiceClient<Request> graphClient = graphClientProvider.getGraphClient();
+        graphClient.subscriptions(subscriptionId).buildRequest().delete();
     }
 }
