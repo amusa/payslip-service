@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
-<project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.payslip</groupId>
   <artifactId>subscription-engine</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <properties>
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
@@ -61,18 +59,15 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
-    </dependency>    
-    <!-- <dependency>
-      <groupId>com.microsoft.graph</groupId>
-      <artifactId>microsoft-graph</artifactId>
-      <version>5.71.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-databind</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency> -->
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.microsoft.graph</groupId>
       <artifactId>microsoft-graph-beta</artifactId>
@@ -83,7 +78,7 @@
           <artifactId>jackson-databind</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
@@ -141,8 +136,7 @@
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20230227</version>
-    </dependency>
-
+    </dependency>    
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -154,6 +148,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <id>sonatype-snapshot</id>
+      <name>Sonatype Snapshot</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
   <build>
     <plugins>
       <plugin>
@@ -210,7 +211,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.2.0</version>
         <executions>
@@ -221,13 +221,10 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <!-- <outputDirectory>${basedir}/cert</outputDirectory> -->
               <outputDirectory>${project.build.directory}/classes/cert</outputDirectory>
               <resources>
                 <resource>
                   <directory>${basedir}/cert</directory>
-                  <!-- <directory>${project.build.directory}/cert</directory> -->
-                  <!--<include>*.[MIME-TYPE]</include>-->
                   <filtering>false</filtering>
                 </resource>
               </resources>
@@ -251,11 +248,4 @@
       </properties>
     </profile>
   </profiles>
-  <repositories>
-    <repository>
-      <id>sonatype-snapshot</id>
-      <name>Sonatype Snapshot</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
 </project>
