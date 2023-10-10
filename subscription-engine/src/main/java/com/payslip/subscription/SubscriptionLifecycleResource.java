@@ -92,7 +92,7 @@ public class SubscriptionLifecycleResource {
             Log.infov("***Lifecycle event not \"reauthorizationRequired\"***");
         }
 
-        registry.counter("subscription.lifecycle.event.count", "eventType", eventType).increment();
+        registry.counter("payslip.subscription.lifecycle.event.count", "eventType", eventType).increment();
 
         return CompletableFuture.completedFuture(Response.ok().build());
     }

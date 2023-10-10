@@ -16,9 +16,13 @@ import com.sap.conn.jco.JCoStructure;
 import com.sap.conn.jco.JCoTable;
 import com.sap.conn.jco.ext.DestinationDataProvider;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,6 +43,9 @@ import org.eclipse.microprofile.faulttolerance.Retry;
  */
 @ApplicationScoped
 public class JcoPayslipService implements PayslipService {
+
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "jco.rfc-dest")
     private String sapRfcDestination;
@@ -95,8 +102,11 @@ public class JcoPayslipService implements PayslipService {
     }
 
     @Override
-    //@CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4, failureRatio = 0.5, delay = 10000)
-    @Retry(retryOn = { JCoException.class}, maxRetries = 2, maxDuration = 10000)
+    // @CircuitBreaker(successThreshold = 2, requestVolumeThreshold = 4,
+    // failureRatio = 0.5, delay = 10000)
+    @Retry(retryOn = { JCoException.class }, maxRetries = 2, maxDuration = 10000)
+    @Counted(value = "payslip.jco.call.count", description = "How many jco calls have been performed.")
+    @Timed(value = "payslip.jco.call.duration", description = "A measure of how long it takes to perform jco call.")
     public List<PayData> getPayslipBytes(String email, LocalDate dateFrom, LocalDate dateTo) throws JCoException {
         Log.infov("--- getPayslipBytes called with parameters: Email={0}, dateFrom={1}, dateTo={2} ---",
                 new Object[] { email, dateFrom, dateTo });
@@ -213,6 +223,7 @@ public class JcoPayslipService implements PayslipService {
             }
 
         } catch (AbapException ex) {
+            registry.counter("payslip.jco.call.exception.count", "type", "valid").increment();
             Log.errorv("Error executing ZBAPI_GET_PAYROLL_RESULT_LIST.");
             throw new RuntimeException("Error executing ZBAPI_GET_PAYROLL_RESULT_LIST.");
         }

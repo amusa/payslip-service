@@ -63,6 +63,14 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
     <!-- <dependency>
       <groupId>com.sap</groupId>
       <artifactId>sapjco3</artifactId>
@@ -75,7 +83,7 @@
       <groupId>com.sap.conn.jco</groupId>
       <artifactId>sapjco3</artifactId>
       <version>3.1.7</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -199,7 +207,7 @@
                   <version>3.1.7</version>
                   <type>so</type>
                   <classifier>linuxx86_64</classifier>
-                  <overWrite>true</overWrite>                  
+                  <overWrite>true</overWrite>
                   <destFileName>libsapjco3.so</destFileName>
                 </artifactItem>
               </artifactItems>
