@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
 import jakarta.annotation.Nonnull;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,6 +27,9 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 @Path("/lifecycle")
 public class SubscriptionLifecycleResource {
+
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "app.clientId")
     private String clientId;
@@ -80,11 +85,14 @@ public class SubscriptionLifecycleResource {
         if (eventType.equals("reauthorizationRequired") || eventType.equals("subscriptionRemoved")) {
             Log.infov("***Resubscribing notification: {0}***", subscriptionId);
             subscriptionManager.resubscribe(subscriptionId);
+
         } else if (eventType.equals("missed")) {
             subscriptionManager.processDeltaMessages(jsonPayload);
         } else {
             Log.infov("***Lifecycle event not \"reauthorizationRequired\"***");
         }
+
+        registry.counter("subscription.lifecycle.event.count", "eventType", eventType).increment();
 
         return CompletableFuture.completedFuture(Response.ok().build());
     }

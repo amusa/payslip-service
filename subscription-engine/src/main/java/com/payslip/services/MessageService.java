@@ -31,6 +31,7 @@ import com.payslip.validators.PayPeriodValidator;
 import com.payslip.validators.PayPeriodViewValidator;
 import com.payslip.validators.ValidatorProcessor;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.logging.Log;
 
 /**
@@ -39,6 +40,8 @@ import io.quarkus.logging.Log;
  */
 @ApplicationScoped
 public class MessageService {
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "app.payDayCheck")
     private Boolean payDayCheck;
@@ -101,6 +104,8 @@ public class MessageService {
                     Log.infov("--- Publishing payslip requests to topic {0}",
                             mapper.writeValueAsString(emailRequest));
 
+                    registerCount(PayslipRequestClass.VALID);
+
                     emitter.send(emailRequest);
 
                     Log.infov("--- payslip request published successfully ---");
@@ -109,16 +114,19 @@ public class MessageService {
                     // Log.infov( "--- mail deleted successfully ---");
                 } catch (Exception ex) {
                     Log.warnv("---Error Parsing request or converting to json string", ex.getMessage());
+                    registerCount(PayslipRequestClass.INVALID);
                     publishError(event.subject, event.sentDateTime, event.sender,
                             UUID.randomUUID().toString(), ex.getMessage());
                 }
             } else {
                 Log.infov("--- Ignoring email: {0} ---", event.subject);
+
+                registerCount(PayslipRequestClass.OTHER);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-        }        
+        }
     }
 
     private void publishError(String subject, LocalDateTime dateSent, String senderEmail, String requestId,
@@ -132,6 +140,24 @@ public class MessageService {
         Log.infov("--- Publishing error notification to '{0}' topic", errorOccurred);
         noticeEmitter.send(errorOccurred);
 
+    }
+
+    private void registerCount(PayslipRequestClass reqClass) {
+        switch (reqClass) {
+            case VALID:
+                registry.counter("payslip.request.count", "type", "valid").increment();
+            case INVALID:
+                registry.counter("payslip.request.count", "type", "invalid").increment();
+            case OTHER:
+                registry.counter("payslip.request.count", "type", "other").increment();
+
+        }
+    }
+
+    public enum PayslipRequestClass {
+        VALID,
+        INVALID,
+        OTHER;
     }
 
 }
