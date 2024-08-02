@@ -1,8 +1,0 @@
-FROM java:8
-MAINTAINER mayemij@gmail.com
-EXPOSE 8081
-COPY target/payslip-fulfilment-thorntail.jar /maven/
-COPY sapjco/libsapjco3.so /usr/local/sbin/
-
-CMD java -Djava.net.preferIPv4Stack=true  -Djava.library.path=/usr/local/sbin/ -jar /maven/payslip-fulfilment-thorntail.jar
-#CMD java -Djava.net.preferIPv4Stack=true  -jar /maven/payslip-fulfilment-thorntail.jar

@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sap-config
+  labels:
+    app: payslip
+data:
+  AS_HOST: "10.0.0.0"
+  SYS_NR: "00" 
+  SAP_CLIENT: "500"
+  SAP_USER_ID: "PAYSLP_AGENT"

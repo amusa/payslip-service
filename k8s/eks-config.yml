@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eks-config
+  labels:
+    app: payslip
+data:
+  AWS_USERID: "965472272371"
+  AWS_ZONE: "eu-west-1"  
+  AWS_CERT_ID: "eb286488-edd5-4390-aff6-e8f6d4b8e4ca"
+  
